@@ -1,0 +1,189 @@
+Your current feature list is actually very comprehensive and provides a strong, well-rounded foundation. You have already covered the critical pathways of triage, communication, emergency response, and record-keeping. It doesn't look lacking at all, but there are definitely some high-impact additions that can add technical depth and practical value to the platform.
+
+Here are several features you could add to elevate the system:
+
+### 🎓 Student Side Additions
+
+* **Medical Certificate / Excuse Slip Automation:** A feature where the AI drafts a request for an absence excuse based on the consultation. Once a clinic staff member reviews and approves the triage case, the system automatically generates a digitally signed PDF excuse slip for their professors.
+* **Active Medication Reminders (Push/SMS):** Instead of just a passive "Digital Pillbox" view, implement an active notification system that alerts the student when it is time to take their prescribed medication.
+* **Offline Symptom Logging:** Connectivity can sometimes be unreliable. Allowing the Vue frontend to cache symptom logs locally and automatically sync them to the database once the connection is restored ensures no data is lost during an emergency.
+* **Interactive First-Aid / Self-Care Knowledge Base:** A searchable repository of verified first-aid protocols (e.g., what to do for a sprain, minor burn, or fever) that students can access instantly while waiting for a clinic response.
+
+### 🏥 Clinic Staff Side Additions
+
+* **Pharmacy & Inventory Management:** Link the "Quick Digital Prescription" feature to a backend inventory system. When a staff member prescribes paracetamol, the system automatically deducts it from the clinic's digital stock and triggers a low-stock alert when supplies run out.
+* **Geospatial Hotspot Mapping:** Utilize spatial database extensions to visualize health trends on a campus map. If multiple students report food poisoning from a specific college building or canteen, the map can highlight that area as a high-risk zone for staff.
+* **External Referral Engine:** Sometimes a case is too severe for a campus clinic. A feature to quickly generate a standardized referral document with the student's AI-summarized medical history to send them to a local hospital.
+* **Bulk Action Triage:** During sudden spikes in illness (like a seasonal flu or a virus outbreak), allow staff to select multiple students with identical low-risk symptoms and send a bulk advisory or standard prescription to all of them at once.
+
+### ⚙️ Admin & Developer Side Additions
+
+* **Granular Role-Based Access Control (RBAC):** Expand "Staff Provisioning" to differentiate between roles (e.g., Head Physician, Triage Nurse, Inventory Clerk). A nurse might be able to assign triage levels, but only a physician can issue certain digital prescriptions.
+* **Anonymized DOH / Public Health Export:** A one-click reporting tool that strips out personally identifiable information (PII) and formats the university's epidemiological data to comply with Department of Health reporting standards.
+* **Automated System Backups & Disaster Recovery:** A scheduled cron job that securely backs up the PostgreSQL database and uploaded medical documents, ensuring continuity in case of server failure.
+
+#### Student Features
+- **Authentication and Profile**:
+  - Register/Login using student ID.
+  - Set up a health profile: age, sex, blood type, known allergies, pre-existing conditions.
+  - Edit profile anytime.
+  - Consent agreement required before first use.
+
+- **AI Consultation**:
+  - Start new consultation sessions.
+  - AI dynamically asks guided follow-up questions based on symptoms.
+  - Input vitals: temperature, pain scale (1-10), duration of symptoms.
+  - AI provides structured responses:
+    - **Possible conditions**.
+    - **Triage level**: Low, Moderate, High.
+    - **Recommended actions**: rest, hydration, OTC medication, or visit the clinic.
+  - **Emergency alert**: Shown instantly if triage = emergency (with clinic contact details).
+  - **Disclaimer**: Displayed before and after every consultation.
+
+- **Health History and Tracking**:
+  - View all past consultations in a timeline.
+  - Compare AI recommendations vs. staff corrections.
+  - **Symptom frequency tracker**: "You’ve reported this symptom X times."
+  - Weekly wellness check-in: Short 3-question mood and health prompt.
+
+- **Notifications**:
+  - Get notified when clinic staff reviews your consultation.
+  - Reminder to follow up if flagged by staff.
+  - Weekly wellness check-in reminders.
+
+---
+
+#### Clinic Staff Features
+- **Dashboard**:
+  - View all incoming student consultations (newest first).
+  - Filter by triage level, date, status (pending, reviewed, flagged).
+  - See AI confidence scores for each case.
+  - Quick stats: Total consultations today, pending reviews, flagged cases.
+
+- **Case Management**:
+  - Open any student consultation and view the full AI conversation.
+  - Add clinical notes to a case.
+  - Override or correct the AI triage level and recommendations.
+  - Mark cases as:
+    - Reviewed.
+    - Needs follow-up.
+    - Referred to a doctor.
+    - Resolved.
+  - Flag urgent cases for immediate attention.
+
+- **Communication**:
+  - Send follow-up messages to students directly in the app.
+  - Students can reply, creating a simple thread per consultation.
+  - Internal notes: Only visible to staff, not students.
+
+- **Reports and Exports**:
+  - Export individual student consultations as PDFs.
+  - Bulk export reports by date range or triage level.
+  - Visual charts for:
+    - Most common symptoms this week/month.
+    - Consultations over time.
+
+---
+
+#### Admin Features
+- **Account Management**:
+  - Create accounts for clinic staff.
+  - Assign roles: Staff, Senior Staff, Admin.
+  - Deactivate or reset staff accounts.
+  - View all registered students and their profiles.
+
+- **System Oversight**:
+  - View full audit logs: Who accessed what record and when.
+  - Monitor AI usage: Total consultations, average triage levels.
+
+---
+
+#### AI Engine (Behind the Scenes)
+- **System Prompt Engineering**:
+  - Configure the AI with a strong health assistant persona and strict rules.
+
+- **Dynamic Follow-Up Logic**:
+  - AI continues asking questions until enough data is collected for a diagnosis.
+
+- **Context Passing**:
+  - Send student health profiles and past consultations to the AI for every session.
+
+- **Structured Output**:
+  - Ensure the AI always returns:
+    - Triage level.
+    - Possible conditions.
+    - Recommendations in a consistent format.
+
+- **No Hallucination Rule**:
+  - AI should say, "I’m not sure, please visit the clinic," rather than guessing.
+
+---
+
+#### Privacy and Security
+- Role-based access control:
+  - Students can’t see other students’ data.
+  - Staff can’t see admin logs.
+- All health data encrypted in the database.
+- Session timeout after inactivity.
+- Audit trail for every data access.
+
+---
+
+#### Audit Report System (Clinic Staff)
+- **Report Scope and Filtering**:
+  - Generate reports filtered by:
+    - College/department (e.g., College of Computer Studies).
+    - Date range.
+    - Triage level.
+    - Symptom category.
+    - Status.
+
+- **Report Contents**:
+  - **Cover Page**:
+    - Central Philippines State University logo and name.
+    - Clinic name.
+    - Report period (e.g., 1st semester, A.Y. 2024-2025).
+    - Date generated.
+    - Generated by (staff name).
+
+  - **Sections**:
+    1. **University-Wide Summary**:
+       - Total number of students who used the system.
+       - Total consultations for the period.
+       - Triage level breakdown (pie or bar chart).
+       - Most reported symptoms (top 10).
+       - Resolved vs. pending vs. referred cases.
+    2. **Per College/Department Breakdown**:
+       - College | No. of Students | Total Consultations | Most Common Symptoms | High/Emergency Cases.
+    3. **Triage Level Analysis**:
+       - Low/Moderate/High emergency cases per department.
+       - Month-by-month triage trend graph.
+    4. **Symptoms Frequency Analysis**:
+       - Most common symptoms university-wide.
+       - Symptoms broken down per college.
+       - Recurring symptoms flagged (students who consulted 3+ times).
+    5. **Student Consultation Details**:
+       - Individual logs: Student ID, name, college, date, triage level, staff action.
+    6. **Staff Activity Summary**:
+       - Number of cases each staff reviewed.
+       - Average response/review time.
+       - Cases overridden or corrected by staff.
+
+- **Export Formats**:
+  - **PDF**:
+    - Formatted with CPSU branding (logo, colors).
+    - Charts and tables rendered cleanly.
+    - Ready to print and submit (signature field for clinic head).
+  - **Excel**:
+    - Each section = one Excel sheet/tab.
+    - Raw data for clinic analysis.
+    - Filterable columns.
+    - Auto-generated charts.
+
+- **Report Generation Flow**:
+  1. Staff selects filters.
+  2. System compiles data from the database.
+  3. Preview shown on screen.
+  4. Staff confirms export as PDF or Excel.
+  5. Report saved in the system (downloadable again later).
+  6. Staff can view all generated reports in the audit log.

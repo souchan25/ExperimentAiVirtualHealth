@@ -1,0 +1,366 @@
+# CPSU AI Virtual Health Assistant — Complete Feature List
+
+> **System:** Central Philippines State University (CPSU) AI-powered Health Information System
+> **Stack:** React (Vite) + FastAPI + SQLite/PostgreSQL
+> **Portals:** Student · Clinic Staff · Administrator
+
+---
+
+## Table of Contents
+
+1. [Shared / Cross-Cutting Features](#1-shared--cross-cutting-features)
+2. [Student Portal](#2-student-portal)
+3. [Clinic Staff Portal](#3-clinic-staff-portal)
+4. [Admin Console](#4-admin-console)
+5. [Backend API Summary](#5-backend-api-summary)
+
+---
+
+## 1. Shared / Cross-Cutting Features
+
+These features apply to all portals regardless of role.
+
+| Feature | Description |
+|---|---|
+| **JWT Authentication** | Token-based login with role-based access control (student / staff / admin) |
+| **Role-protected Routes** | Each portal (Student, Staff, Admin) is gated by the user's role |
+| **Consent Gate** | On first login, students must accept a data-privacy consent before accessing the system |
+| **Collapsible Sidebar** | All dashboards have a responsive, collapsible navigation sidebar |
+| **CPSU Branding** | CPSU logo and branded color scheme across all portals |
+| **Health Alert Banner** | System-wide health alerts broadcast by staff are visible as a banner in the Student portal |
+| **Audit Logging** | All significant user actions (login, case updates, backup, etc.) are logged to the audit trail |
+| **Secure Logout** | Header includes a logout button that clears the auth token and redirects to login |
+| **Messaging System** | Real-time-style direct messaging between students and clinic staff |
+| **Responsive Design** | Glassmorphism UI with premium design using Tailwind CSS |
+
+---
+
+## 2. Student Portal
+
+The Student Portal is the primary patient-facing interface.
+
+---
+
+### 2.1 AI Consultation (Chat)
+
+| Feature | Description |
+|---|---|
+| **AI-powered Health Chat** | Chat interface powered by a generative AI model to assess symptoms and provide preliminary health guidance |
+| **Triage Classification** | AI automatically classifies the severity of a consultation: **Low / Moderate / High / Emergency** |
+| **Symptom Summary Generation** | The AI generates a plain-text symptoms summary that is attached to the consultation record |
+| **Consultation History Persistence** | Every AI conversation is saved as a consultation record retrievable later |
+| **Excuse Slip Request** | Within or after an AI consultation, the student can request a medical excuse slip |
+| **Clinical Feedback Display** | Students can view official feedback written by clinic staff on their consultation |
+| **Context-aware Responses** | The AI has access to the student's health profile for more personalized advice |
+
+---
+
+### 2.2 Appointments
+
+| Feature | Description |
+|---|---|
+| **View My Appointments** | Students can view all their scheduled clinic appointments |
+| **Book an Appointment** | Students can request/schedule a new appointment with the clinic |
+| **Appointment Status** | Each appointment shows its current status (pending, confirmed, completed, cancelled) |
+
+---
+
+### 2.3 My Pillbox
+
+| Feature | Description |
+|---|---|
+| **View Prescriptions** | Students can view all prescriptions issued to them by clinic staff |
+| **Medication Details** | Each prescription shows medication name, dosage, frequency, and duration |
+| **Prescription History** | Full history of all past prescriptions linked to the student's account |
+
+---
+
+### 2.4 Consultation History
+
+| Feature | Description |
+|---|---|
+| **Full Consultation Log** | A list of all past AI consultations with timestamp, triage level, and status |
+| **Detailed Consultation View** | Click into any consultation to re-read the full AI conversation, staff feedback, and clinical notes |
+| **Triage Badge Display** | Each record shows the AI-assigned triage level and any staff override visually |
+| **Status Tracking** | Each consultation shows its workflow status (pending, reviewed, flagged, resolved, etc.) |
+
+---
+
+### 2.5 Medical Records
+
+| Feature | Description |
+|---|---|
+| **View Medical Documents** | Students can access official health documents uploaded to their record |
+| **Download Documents** | Students can download their medical documents (e.g., clearance, records) |
+| **Upload Documents** | Students can upload their own health documents (e.g., external lab results) |
+
+---
+
+### 2.6 First-Aid Knowledge Base
+
+| Feature | Description |
+|---|---|
+| **Searchable Knowledge Base** | A library of first-aid procedures and health information articles |
+| **Emergency Guides** | Categorized first-aid guides for common emergencies (burns, allergic reactions, fractures, etc.) |
+| **Read-only Access** | Students can browse articles without needing an active consultation |
+
+---
+
+### 2.7 Messages
+
+| Feature | Description |
+|---|---|
+| **Direct Inbox** | Students receive and send direct messages to/from clinic staff |
+| **Consultation-linked Messages** | Messages sent by staff about a specific case are viewable in context |
+| **Real-time Style UI** | Message thread displays sender name, timestamp, and message content |
+
+---
+
+### 2.8 My Profile (Health Profile)
+
+| Feature | Description |
+|---|---|
+| **View Health Profile** | Students can view their personal health profile |
+| **Edit Health Profile** | Students can update personal information, emergency contacts, and medical history |
+| **Age / Sex / Blood Type** | Core demographic fields stored and used in referral documents |
+| **Allergies & Pre-existing Conditions** | Medical history fields used in clinical assessments and referrals |
+| **Consent Status** | Indicates whether the student has accepted the data-privacy consent |
+
+---
+
+### 2.9 SOS / Emergency Features
+
+| Feature | Description |
+|---|---|
+| **SOS Button** | A persistent emergency SOS button visible on the student dashboard for immediate distress signaling |
+| **SOS Alert Trigger** | Pressing the SOS button creates an urgent alert that is pushed to the clinic staff's SOS monitor |
+| **Emergency Contact Info** | Alert includes the student's identity for rapid staff response |
+
+---
+
+### 2.10 Daily Wellness Check-in
+
+| Feature | Description |
+|---|---|
+| **Wellness Modal** | On each login (after consent), students are prompted to fill in a daily wellness check-in |
+| **Mood Score** | Students self-report their current mood level |
+| **Physical Status** | Students self-report their physical wellbeing |
+| **Stress Level** | Students self-report their current stress level |
+| **Automatic Skip** | If already checked in today, the modal is skipped automatically |
+
+---
+
+## 3. Clinic Staff Portal
+
+The Staff Portal is the clinical management dashboard for healthcare personnel.
+
+---
+
+### 3.1 SOS Monitoring
+
+| Feature | Description |
+|---|---|
+| **Live SOS Alert Feed** | Real-time list of all SOS distress signals sent by students |
+| **Student Identity** | Each alert includes the student's name, college, and timestamp |
+| **Alert Acknowledgement** | Staff can acknowledge and respond to active SOS alerts |
+| **Priority Indicator** | Emergency-level alerts are visually elevated for immediate attention |
+
+---
+
+### 3.2 Consultations (Case Management)
+
+| Feature | Description |
+|---|---|
+| **Consultation Queue** | View all incoming AI consultations from all students across all colleges |
+| **Filter by Triage Level** | Filter the consultation list by Low / Moderate / High / Emergency urgency |
+| **Filter by Status** | Filter by consultation status: pending, reviewed, flagged, follow_up, referred, resolved |
+| **Detailed Case View** | Click any consultation to open the full AI conversation, patient info, and management panel |
+| **AI Conversation read-back** | Staff can read the full student-AI dialogue that led to the consultation |
+| **Status Update** | Staff can set the consultation status (pending → reviewed → resolved, etc.) |
+| **Triage Override** | Staff can manually override the AI-assigned triage level with a clinical assessment |
+| **Flag as Urgent** | Staff can flag a case as requiring immediate attention |
+| **Internal Clinical Notes** | Staff can write private notes (not visible to the student) on a consultation |
+| **Clinical Feedback to Student** | Staff can write feedback that is visible to the student in their consultation history |
+| **Bulk Case Actions** | Select multiple consultations and apply status updates, triage overrides, or broadcast messages in bulk |
+| **Bulk Automated Notice** | Staff can send an automated message to all selected students at once |
+| **Direct Messaging** | Staff can send/receive direct messages with the student from within the case view |
+
+---
+
+### 3.3 Excuse Slip Management
+
+| Feature | Description |
+|---|---|
+| **View Excuse Slip Requests** | Staff can see whether a student has requested a medical excuse slip on a consultation |
+| **Approve Excuse Slip** | Staff can toggle approval of the excuse slip with a checkbox |
+| **Generated Document** | Approved excuse slip status is saved to the consultation record and visible to the student |
+
+---
+
+### 3.4 Clinical Referrals (PDF)
+
+| Feature | Description |
+|---|---|
+| **Generate External Referral PDF** | Staff can generate a standardized clinical referral document for any consultation |
+| **Auto-populated Patient Data** | The PDF is automatically pre-filled with the student's profile (name, college, age, sex, blood type, allergies, pre-existing conditions) |
+| **Clinical Assessment Section** | The PDF includes the consultation date, triage level, symptom summary, and staff clinical notes |
+| **PDF Download** | The referral document is downloaded as a PDF file named `clinical_referral_{id}.pdf` |
+| **CPSU Letterhead** | The PDF uses the CPSU logo and official clinic header |
+
+---
+
+### 3.5 Quick Prescriptions
+
+| Feature | Description |
+|---|---|
+| **Inline Prescription** | From within any consultation case view, staff can prescribe medication directly |
+| **Medication, Dosage, Frequency** | Three-field quick-form for medication name, dose (e.g., 500mg), and frequency (e.g., 2x/day) |
+| **Linked to Consultation** | The prescription is linked to both the student and the specific consultation |
+| **Student Pillbox Update** | The issued prescription appears in the student's "My Pillbox" section |
+
+---
+
+### 3.6 Appointments (Staff View)
+
+| Feature | Description |
+|---|---|
+| **View All Appointments** | Staff can see all appointments scheduled by students across the clinic |
+| **Manage Appointment Status** | Staff can update the status of an appointment (confirm, complete, cancel) |
+| **Appointment Details** | Each appointment record shows student name, college, and scheduled date/time |
+
+---
+
+### 3.7 Pharmacy / Inventory Manager
+
+| Feature | Description |
+|---|---|
+| **View Inventory** | Staff can see all medical supplies and medicines in the clinic inventory |
+| **Add Inventory Item** | Staff can add new items with name, category, quantity, and unit |
+| **Update Stock Quantity** | Staff can update the quantity of existing inventory items |
+| **Low-stock Alerts** | Items below a minimum threshold are visually flagged for restocking |
+| **Category Filtering** | Inventory can be filtered by category (e.g., medicine, supplies, equipment) |
+| **Delete Item** | Staff can remove an item from the inventory registry |
+
+---
+
+### 3.8 Messaging
+
+| Feature | Description |
+|---|---|
+| **Staff Inbox** | Staff can view all student messages and respond directly |
+| **Conversation Threads** | Messages are organized by student/consultation thread |
+| **Send Direct Messages** | Staff can initiate or reply to messages from any student |
+
+---
+
+### 3.9 Audit Reports
+
+| Feature | Description |
+|---|---|
+| **University Health Audit Dashboard** | System-wide view of health trends and consultation statistics |
+| **Triage Level Breakdown** | Visual bar chart showing percentage of Low / Moderate / High / Emergency cases |
+| **Most Reported Symptoms** | Tag cloud of the top health complaints reported by students |
+| **Per-college Breakdown Table** | Table showing total consultations, high/emergency count, and most common symptom per college |
+| **PDF Report Export** | Export the full health audit as a printable PDF report |
+| **Excel Report Export** | Export the full health audit as an Excel spreadsheet (.xlsx) |
+| **Anonymized DOH Export** | Export a privacy-compliant, anonymized dataset in `.xlsx` format for DOH regulatory submissions |
+
+---
+
+### 3.10 Health Alerts
+
+| Feature | Description |
+|---|---|
+| **Compose Health Alert** | Staff can write system-wide health bulletins (e.g., dengue warning, flu advisory) |
+| **Broadcast to Students** | Published alerts are displayed as a banner to all logged-in students |
+| **Alert Management** | Staff can view, create, and deactivate alerts from the Health Alerts Manager |
+| **Alert Severity Levels** | Alerts can be tagged with severity level (info, warning, critical) |
+
+---
+
+## 4. Admin Console
+
+The Admin Console is the highest-privilege portal for system administrators.
+
+---
+
+### 4.1 System Monitoring (Overview)
+
+| Feature | Description |
+|---|---|
+| **Real-time System Stats** | Dashboard tiles showing total students, staff, consultations, and flagged anomalies |
+| **System Pulse Indicator** | Sidebar shows live "Operational" / capacity status |
+| **Campus Health Hotspot Map** | Interactive map showing disease/consultation hotspots per college campus |
+| **College-based Clustering** | Map clusters active consultation counts by college (CCS, CAS, CAF, CBM, COE, CCJE) |
+
+---
+
+### 4.2 Staff Provisioning
+
+| Feature | Description |
+|---|---|
+| **Create Staff Account** | Admin can create new accounts for clinic personnel |
+| **Assign Role** | When creating a staff account, admin assigns the role: **Clinical Staff** or **System Administrator** |
+| **Full Name & Work Email** | Required fields for staff account creation |
+| **Secure Password Assignment** | Admin sets an initial password for the new staff account |
+| **Duplicate Email Guard** | System rejects creation if the email is already registered |
+
+---
+
+### 4.3 User Management *(API-level)*
+
+| Feature | Description |
+|---|---|
+| **List All Users** | Admin can retrieve a list of all registered users (students, staff, admins) |
+| **Activate / Deactivate User** | Admin can toggle the `is_active` flag on any user account |
+| **Update User Role** | Admin can change a user's role (e.g., promote staff to admin) |
+| **Update User Name** | Admin can update the display name of any user |
+
+---
+
+### 4.4 Audit Logs
+
+| Feature | Description |
+|---|---|
+| **View System Audit Log** | Admin can see a chronological log of all significant system actions |
+| **Action Type Tracking** | Logs capture: login, view, create, update, delete, backup events |
+| **Actor Name** | Each log entry shows the name of the user who performed the action |
+| **Resource Tracking** | Logs show which resource was acted upon (e.g., `consultation:42`, `user:7`) |
+| **Details Field** | Extra context is stored with each log entry for forensic tracing |
+
+---
+
+### 4.5 Data Backup
+
+| Feature | Description |
+|---|---|
+| **Manual Backup Trigger** | Admin can trigger a secure database backup from the dashboard |
+| **Backup Confirmation** | On success, the UI displays the resulting backup filename |
+| **Backup Audit Trail** | Every backup event is recorded in the audit log with timestamp and filename |
+
+---
+
+## 5. Backend API Summary
+
+| Router | Prefix | Accessible By |
+|---|---|---|
+| `auth.py` | `/api/auth` | Public (login, register) |
+| `profile.py` | `/api/profile` | Student |
+| `consultations.py` | `/api/consultations` | Student |
+| `appointments.py` | `/api/appointments` | Student, Staff |
+| `prescriptions.py` | `/api/prescriptions` | Student (read), Staff (write) |
+| `documents.py` | `/api/documents` | Student |
+| `messages.py` | `/api/messages` | Student, Staff |
+| `alerts.py` | `/api/alerts` | Public (read), Staff (write) |
+| `sos.py` | `/api/sos` | Student (trigger), Staff (monitor) |
+| `knowledge.py` | `/api/knowledge` | Student |
+| `inventory.py` | `/api/inventory` | Staff |
+| `staff.py` | `/api/staff` | Staff, Admin |
+| `reports.py` | `/api/reports` | Staff, Admin |
+| `follow_ups.py` | `/api/follow-ups` | Staff |
+| `admin.py` | `/api/admin` | Admin only |
+
+---
+
+*Last updated: 2026-03-06*
+*Project: CPSU AI Virtual Health Assistant*

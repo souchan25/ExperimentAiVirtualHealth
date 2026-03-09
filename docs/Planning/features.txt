@@ -1,0 +1,42 @@
+# CPSU AI Virtual Health Assistant - Current Platform Features
+
+## 🎓 Student Side
+- **AI-Guided Consultations:** Real-time chat with AI to assess symptoms and receive immediate health guidance.
+- **Smart Triage System:** Automatic classification (Low/Moderate/High/Emergency) based on reported symptoms with NLP parsing.
+- **Floating SOS Emergency Button:** One-tap emergency trigger that alerts campus clinic staff instantly with your location.
+- **Digital Pillbox:** Centralized view of all active medications and prescriptions issued by university clinic staff.
+* **Medical Excuse Slip Automation:** Request and download digitally generated excuse slips after staff approval.
+- **Medical Records AI:** Upload medical documents (lab results, certificates) for automated AI clinical data extraction.
+- **Wellness Check-ins:** Periodic mental and physical health tracking (Mood, Stress, and Physical status).
+- **First-Aid Knowledge Base:** Searchable repository of verified first-aid and self-care protocols.
+- **Appointment Booking:** Schedule and manage in-person or telehealth visits directly from the dashboard.
+- **Direct Messaging:** Secure 1-on-1 messaging channel with clinic staff for follow-up guidance.
+- **Campus Health Alerts:** Live banner notifications for university-wide health updates (Info/Warning/Critical).
+- **Offline Symptom Logging:** Local caching and automatic syncing of symptom reports to the database when connection is restored.
+- **Personal Health Profile:** Manage medical data, including blood type, allergies, and pre-existing conditions.
+- **Consultation History:** Accessible archives of all past AI and staff interactions.
+- **Privacy & Consent:** Integrated consent management for medical data handling.
+
+## 🏥 Clinic Staff Side
+- **SOS Emergency Monitor:** Real-time tracking of student SOS triggers for immediate medical response.
+- **Clinical Case Management:** Review pending consultations, triage levels, and detailed student symptom summaries.
+- **AI-Human Collaborative Review:** Access full student-AI chat logs with the ability to override/assign triage levels and add clinical notes.
+- **Pharmacy & Inventory Management:** Track medical stock, manage inventory items, and receive low-stock alerts.
+- **Geospatial Hotspot Mapping:** Visualize health trends and clusters on a campus map based on reported symptoms.
+- **Advanced Health Audit Reports:** Generate university-wide analytics in PDF (branded) and Excel formats.
+- **Anonymized DOH Export:** Export epidemiological data stripped of PII for public health reporting (DOH standards).
+- **Health Alert Broadcaster:** Create and push campus-wide health alerts with specific severity levels.
+- **Appointment Terminal:** Manage and oversee the university's medical appointment schedule.
+
+## ⚙️ Admin (System Oversight)
+- **Staff Provisioning:** Exclusive tool for creating and managing secure Clinic Staff and Senior Staff accounts.
+- **Full User Registry:** Oversee all students and staff on the platform with account management capabilities.
+- **Immutable Audit Logs:** Non-editable security logs recording all system actions and resource access.
+- **System Backups:** Manual trigger functionality for database and document backups.
+- **Admin Analytics:** Real-time university engagement statistics and flagged case overview.
+
+## 🧠 AI Engine & Security
+- **Clinical NLP Extraction:** Automated extraction of symptoms and durations using OpenAI Vision/LLM.
+- **Structured Output Integrity:** AI engine enforced to return consistent triage and conditions format.
+- **Role-Based Access Control (RBAC):** Granular permissions ensuring data privacy between students, staff, and admins.
+- **Encrypted Data Storage:** Security-first approach for all sensitive health records.
