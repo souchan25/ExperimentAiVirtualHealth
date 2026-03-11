@@ -153,24 +153,24 @@ async def mark_message_as_read(
     result = await db.execute(
         text(
             """
-            SELECT rowid, id, recipient_id
+            SELECT id, recipient_id
             FROM messages
             """
         )
     )
 
-    target_rowid = None
+    target_id = None
     for row in result.mappings().all():
         if _normalize_id(row["id"]) == str(message_id) and _normalize_id(row["recipient_id"]) == uid:
-            target_rowid = row["rowid"]
+            target_id = row["id"]
             break
 
-    if target_rowid is None:
+    if target_id is None:
         raise HTTPException(status_code=404, detail="Message not found")
 
     await db.execute(
-        text("UPDATE messages SET is_read = 1 WHERE rowid = :rowid"),
-        {"rowid": target_rowid},
+        text("UPDATE messages SET is_read = True WHERE id = :id"),
+        {"id": target_id},
     )
 
     await db.commit()
