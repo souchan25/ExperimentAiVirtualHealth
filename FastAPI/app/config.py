@@ -1,4 +1,6 @@
 import os
+import secrets
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import List
 from urllib.parse import quote_plus
@@ -6,7 +8,10 @@ from urllib.parse import quote_plus
 class Settings(BaseSettings):
     # Core
     DEBUG: bool = False
-    SECRET_KEY: str = "your-super-secret-key-here-change-this-in-production"
+    SECRET_KEY: str = Field(
+        default_factory=lambda: secrets.token_urlsafe(32),
+        description="Secret key for JWT generation. Should be set in .env for production to prevent token invalidation on restarts."
+    )
     
     # Database
     USE_SQLITE: bool = True  # Default to SQLite for development
