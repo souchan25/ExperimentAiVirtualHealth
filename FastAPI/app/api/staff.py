@@ -17,11 +17,13 @@ async def get_dashboard(
         raise HTTPException(status_code=403, detail="Staff access only")
         
     # Aggregate data for dashboard
-    users_result = await db.execute(select(User).where(User.role == "student"))
-    total_students = len(users_result.scalars().all())
+    # Performance Optimization: Use SQL COUNT directly to prevent loading all entities into memory
+    from sqlalchemy import func
+    users_result = await db.execute(select(func.count(User.id)).where(User.role == "student"))
+    total_students = users_result.scalar() or 0
     
-    symptoms_result = await db.execute(select(SymptomRecord))
-    total_symptoms = len(symptoms_result.scalars().all())
+    symptoms_result = await db.execute(select(func.count(SymptomRecord.id)))
+    total_symptoms = symptoms_result.scalar() or 0
     
     return {
         "total_students": total_students,
