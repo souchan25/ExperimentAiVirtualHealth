@@ -28,7 +28,8 @@ def generate_medical_slip(buffer, student, issuer, slip_in):
     width, height = letter
     
     # Draw Logo
-    logo_path = "d:/Expiremental/Assets/cpsu-logo.png"
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    logo_path = os.path.abspath(os.path.join(current_dir, "..", "..", "..", "Assets", "cpsu-logo.png"))
     if os.path.exists(logo_path):
         c.drawImage(logo_path, 1*inch, height - 1.4*inch, width=0.8*inch, height=0.8*inch, mask='auto')
     

@@ -306,7 +306,8 @@ async def export_pdf_report(
         header_y = PageHeight - 0.4*inch
         
         # Logo
-        logo_path = "d:/Expiremental/Assets/cpsu-logo.png"
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        logo_path = os.path.abspath(os.path.join(current_dir, "..", "..", "..", "Assets", "cpsu-logo.png"))
         if os.path.exists(logo_path):
             canvas.drawImage(logo_path, doc.leftMargin, header_y - 0.2*inch, width=0.4*inch, height=0.4*inch, mask='auto')
         
@@ -390,7 +391,8 @@ async def export_pdf_report(
     
     # --- Title Page (Premium Design) ---
     elements.append(Spacer(1, 1.5*inch))
-    logo_path = "d:/Expiremental/Assets/cpsu-logo.png"
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    logo_path = os.path.abspath(os.path.join(current_dir, "..", "..", "..", "Assets", "cpsu-logo.png"))
     if os.path.exists(logo_path):
         img = Image(logo_path, 2*inch, 2*inch)
         img.hAlign = 'CENTER'
@@ -842,7 +844,8 @@ async def export_referral_pdf(
     width, height = letter
     
     # --- Letterhead ---
-    logo_path = "d:/Expiremental/Assets/cpsu-logo.png"
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    logo_path = os.path.abspath(os.path.join(current_dir, "..", "..", "..", "Assets", "cpsu-logo.png"))
     if os.path.exists(logo_path):
         c.drawImage(logo_path, 1*inch, height - 1.2*inch, width=0.8*inch, height=0.8*inch, mask='auto')
     
