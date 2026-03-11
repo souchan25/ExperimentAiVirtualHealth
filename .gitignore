@@ -96,3 +96,5 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 error_log.txt
+
+Mobile/

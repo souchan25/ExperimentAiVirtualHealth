@@ -24,6 +24,15 @@ class Settings(BaseSettings):
         "http://localhost:3000",
         "http://localhost:5173",
         "http://127.0.0.1:5173",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+        "http://10.0.11.154:8000",
+        "http://localhost:8081",
+        "http://localhost:8082",
+        "http://127.0.0.1:8081",
+        "http://127.0.0.1:8082",
+        "http://10.0.11.154:8081",
+        "http://10.0.11.154:8082",
     ]
     
     # ML
