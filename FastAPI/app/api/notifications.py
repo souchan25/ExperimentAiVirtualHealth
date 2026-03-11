@@ -28,11 +28,15 @@ async def get_unread_count(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    # Performance Optimization: Use database-level COUNT instead of fetching all records
+    # This endpoint is polled by the frontend every 30s, so minimizing DB transfer payload is crucial
+    from sqlalchemy import func
     result = await db.execute(
-        select(Notification)
+        select(func.count(Notification.id))
         .where(Notification.user_id == current_user.id, Notification.is_read == False)
     )
-    return {"count": len(result.scalars().all())}
+    count = result.scalar() or 0
+    return {"count": count}
 
 @router.patch("/{notification_id}/read")
 async def mark_notification_as_read(
