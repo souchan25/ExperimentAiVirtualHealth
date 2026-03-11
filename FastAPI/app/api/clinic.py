@@ -1,23 +1,52 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
-from ..database import get_db
+from ..database import get_db, AsyncSessionLocal
 from ..models import SymptomRecord, User
 from ..schemas import SymptomCreate, SymptomResponse, SymptomAssessmentResponse
 from ..auth import get_current_user
 import uuid
+import json
 
 router = APIRouter(prefix="/clinic", tags=["clinic"])
 
 from ..services.ml import ml_predictor
 from ..services.llm import ai_generator
 
+
+async def generate_insights_background(symptom_id: uuid.UUID, symptoms: list[str], predicted_disease: str):
+    """Background task to generate AI insights and update the symptom record."""
+    insights = await ai_generator.generate_health_insights(
+        symptoms,
+        predicted_disease
+    )
+
+    async with AsyncSessionLocal() as db:
+        # Fetch the record
+        from sqlalchemy.future import select
+        result = await db.execute(select(SymptomRecord).where(SymptomRecord.id == symptom_id))
+        record = result.scalars().first()
+
+        if record:
+            # We save the insights into the top_predictions or a new field,
+            # or in a new HealthInsight record. For now, since SymptomRecord
+            # doesn't have an 'insights' JSON field directly mapped to these outputs,
+            # we'll save it to staff_notes temporarily, or you can add a field.
+            # But the user expects immediate response. Let's see how it was previously handled.
+            # Previously it was awaited before returning. We'll return an initial response
+            # and update the insights.
+            # However, if the frontend expects insights in the immediate response,
+            # maybe backgrounding AI Refinement is tricky. Let's review the schema.
+            pass
+
+
 @router.post("/symptoms/submit", response_model=SymptomAssessmentResponse)
 async def submit_symptoms(
-    symptom_in: SymptomCreate, 
+    symptom_in: SymptomCreate,
+    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    # ML Prediction
+    # ML Prediction is fast (synchronous)
     prediction = ml_predictor.predict(symptom_in.symptoms)
     predicted_disease = prediction.get('predicted_disease', 'Unknown')
     confidence_score = prediction.get('confidence_score', prediction.get('confidence', 0.0))
@@ -25,7 +54,7 @@ async def submit_symptoms(
     description = prediction.get('description', '')
     precautions = prediction.get('precautions', [])
     
-    # AI Refinement (Clinical validation)
+    # We still await refinement as it changes the primary diagnosis returned
     refined = await ai_generator.refine_diagnosis(
         symptom_in.symptoms,
         predicted_disease,
@@ -36,12 +65,7 @@ async def submit_symptoms(
         predicted_disease = refined["refined_disease"]
         confidence_score = refined["refined_confidence"]
 
-    # AI Insights (Async)
-    insights = await ai_generator.generate_health_insights(
-        symptom_in.symptoms, 
-        predicted_disease
-    )
-    
+    # Save to database first to get the ID
     db_symptom = SymptomRecord(
         student_id=current_user.id,
         symptoms=symptom_in.symptoms,
@@ -61,6 +85,17 @@ async def submit_symptoms(
     db.add(db_symptom)
     await db.commit()
     await db.refresh(db_symptom)
+
+    # Note: If the frontend relies on the immediate AI insights in the return payload,
+    # we shouldn't background it without changing frontend state management.
+    # We'll await it here but in a real-world scenario we'd use WebSockets or Polling.
+    # Since `symptoms/submit` returns `SymptomAssessmentResponse` which includes `summary` and `recommendations`,
+    # we MUST await the AI generator to fill those fields.
+    insights = await ai_generator.generate_health_insights(
+        symptom_in.symptoms,
+        predicted_disease
+    )
+
     return {
         "id": db_symptom.id,
         "symptoms": db_symptom.symptoms,
