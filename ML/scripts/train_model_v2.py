@@ -5,11 +5,10 @@ Target accuracy: 85-95% (realistic, not suspiciously 100%)
 """
 
 import pandas as pd
-import numpy as np
 from sklearn.model_selection import train_test_split, cross_val_score, StratifiedKFold
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.svm import SVC
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+from sklearn.metrics import accuracy_score, classification_report
 import pickle
 import warnings
 warnings.filterwarnings('ignore')
