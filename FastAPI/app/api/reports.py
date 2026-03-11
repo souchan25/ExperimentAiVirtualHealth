@@ -215,10 +215,10 @@ async def get_aggregated_report_data(db: AsyncSession):
     # Staff Activity: Overrides calculation
     # Override = staff_diagnosis != predicted_disease and staff_diagnosis is not empty
     overrides_result = await db.execute(
-        select(SymptomRecord.predicted_disease, SymptomRecord.staff_diagnosis)
+        select(func.count(SymptomRecord.id))
         .where(SymptomRecord.staff_diagnosis != "", SymptomRecord.staff_diagnosis != SymptomRecord.predicted_disease)
     )
-    total_overrides = len(overrides_result.all())
+    total_overrides = overrides_result.scalar() or 0
 
     return {
         "summary": {

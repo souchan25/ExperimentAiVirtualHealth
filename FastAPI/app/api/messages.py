@@ -39,46 +39,34 @@ async def get_messages(
 ):
     uid = _normalize_id(current_user.id)
 
-    users_result = await db.execute(text("SELECT id, name FROM users"))
+    users_result = await db.execute(select(User.id, User.name))
     user_map = {
-        _normalize_id(row[0]): row[1]
-        for row in users_result.fetchall()
+        _normalize_id(row.id): row.name
+        for row in users_result.all()
     }
 
     result = await db.execute(
-        text(
-            """
-            SELECT
-                id,
-                sender_id,
-                recipient_id,
-                content,
-                is_read,
-                timestamp
-            FROM messages
-            ORDER BY timestamp ASC
-            """
-        )
+        select(Message).order_by(Message.timestamp.asc())
     )
 
-    rows = result.mappings().all()
+    rows = result.scalars().all()
     serialized = []
     for row in rows:
-        sender_id = _normalize_id(row["sender_id"])
-        recipient_id = _normalize_id(row["recipient_id"])
+        sender_id = _normalize_id(row.sender_id)
+        recipient_id = _normalize_id(row.recipient_id)
         if sender_id != uid and recipient_id != uid:
             continue
 
         serialized.append(
             {
-                "id": _normalize_id(row["id"]),
+                "id": _normalize_id(row.id),
                 "sender_id": sender_id,
                 "recipient_id": recipient_id,
                 "sender_name": user_map.get(sender_id),
                 "recipient_name": user_map.get(recipient_id),
-                "content": row["content"],
-                "is_read": bool(row["is_read"]),
-                "timestamp": row["timestamp"],
+                "content": row.content,
+                "is_read": bool(row.is_read),
+                "timestamp": row.timestamp,
             }
         )
     return serialized
@@ -151,27 +139,25 @@ async def mark_message_as_read(
 ):
     uid = _normalize_id(current_user.id)
     result = await db.execute(
-        text(
-            """
-            SELECT id, recipient_id
-            FROM messages
-            """
-        )
+        select(Message.id, Message.recipient_id)
     )
 
     target_id = None
-    for row in result.mappings().all():
-        if _normalize_id(row["id"]) == str(message_id) and _normalize_id(row["recipient_id"]) == uid:
-            target_id = row["id"]
+    for row in result.all():
+        if _normalize_id(row.id) == str(message_id) and _normalize_id(row.recipient_id) == uid:
+            target_id = row.id
             break
 
     if target_id is None:
         raise HTTPException(status_code=404, detail="Message not found")
 
     await db.execute(
-        text("UPDATE messages SET is_read = True WHERE id = :id"),
-        {"id": target_id},
+        select(Message).where(Message.id == target_id)
     )
+    # Perform the update
+    message = await db.scalar(select(Message).where(Message.id == target_id))
+    if message:
+        message.is_read = True
+        await db.commit()
 
-    await db.commit()
     return {"status": "success"}

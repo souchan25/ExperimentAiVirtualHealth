@@ -166,19 +166,17 @@ const StudentDashboard = () => {
   }, [hasActiveEmergency, activeEmergency?.id]);
 
   const getEmergencyLocation = () => {
-    const fallbackLocation = user?.cpsu_address || 'Location unavailable - Student Dashboard SOS';
-
     if (!navigator.geolocation) {
-      return Promise.resolve(fallbackLocation);
+      return Promise.reject(new Error("Geolocation is not supported by your browser."));
     }
 
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
           resolve(`GPS ${latitude.toFixed(6)}, ${longitude.toFixed(6)} (Student Dashboard)`);
         },
-        () => resolve(fallbackLocation),
+        () => reject(new Error("Failed to get current location. Please enable location services.")),
         {
           enableHighAccuracy: true,
           timeout: 8000,
@@ -211,7 +209,9 @@ const StudentDashboard = () => {
         alert("Emergency alert sent! Please stay where you are. Help is on the way.");
       } catch (err) {
         console.error("Failed to trigger emergency:", err);
-        if (err?.response?.status === 409) {
+        if (err.message === "Geolocation is not supported by your browser." || err.message === "Failed to get current location. Please enable location services.") {
+            alert(err.message);
+        } else if (err?.response?.status === 409) {
           setHasActiveEmergency(true);
           alert("You already have an active emergency case. Please wait for clinic staff to resolve it.");
         } else {
