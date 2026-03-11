@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy import text
+from sqlalchemy import text, or_
 from typing import List
 from uuid import UUID
 from ..database import get_db
@@ -37,8 +37,6 @@ async def get_messages(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    uid = _normalize_id(current_user.id)
-
     users_result = await db.execute(select(User.id, User.name))
     user_map = {
         _normalize_id(row.id): row.name
@@ -46,7 +44,9 @@ async def get_messages(
     }
 
     result = await db.execute(
-        select(Message).order_by(Message.timestamp.asc())
+        select(Message)
+        .where(or_(Message.sender_id == current_user.id, Message.recipient_id == current_user.id))
+        .order_by(Message.timestamp.asc())
     )
 
     rows = result.scalars().all()
@@ -54,8 +54,6 @@ async def get_messages(
     for row in rows:
         sender_id = _normalize_id(row.sender_id)
         recipient_id = _normalize_id(row.recipient_id)
-        if sender_id != uid and recipient_id != uid:
-            continue
 
         serialized.append(
             {
@@ -137,27 +135,25 @@ async def mark_message_as_read(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    uid = _normalize_id(current_user.id)
+    # Try to parse message_id as UUID if it's stored as UUID in DB
+    try:
+        msg_uuid = UUID(message_id)
+    except ValueError:
+        msg_uuid = message_id
+
+    # Filter by ID and recipient directly in the query
     result = await db.execute(
-        select(Message.id, Message.recipient_id)
+        select(Message).where(
+            Message.id == msg_uuid,
+            Message.recipient_id == current_user.id
+        )
     )
+    message = result.scalars().first()
 
-    target_id = None
-    for row in result.all():
-        if _normalize_id(row.id) == str(message_id) and _normalize_id(row.recipient_id) == uid:
-            target_id = row.id
-            break
-
-    if target_id is None:
+    if not message:
         raise HTTPException(status_code=404, detail="Message not found")
 
-    await db.execute(
-        select(Message).where(Message.id == target_id)
-    )
-    # Perform the update
-    message = await db.scalar(select(Message).where(Message.id == target_id))
-    if message:
-        message.is_read = True
-        await db.commit()
+    message.is_read = True
+    await db.commit()
 
     return {"status": "success"}
