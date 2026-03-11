@@ -67,8 +67,13 @@ async def create_medication(
     
     db.add(db_med)
     
-    # Notify student
+    # Commit changes
+    await db.commit()
+    await db.refresh(db_med)
+
+    # Notify student (Background task could be better, but since it's an internal fast function, we keep it as is, or you can use BackgroundTasks)
     from ..utils.notifications import create_notification
+    # We await it since it just inserts to DB, but normally email sending would be backgrounded.
     await create_notification(
         db,
         user_id=student_id,
@@ -78,8 +83,6 @@ async def create_medication(
         link="/student/medications"
     )
     
-    await db.commit()
-    await db.refresh(db_med)
     return db_med
 
 @router.post("/logs/{log_id}/taken")

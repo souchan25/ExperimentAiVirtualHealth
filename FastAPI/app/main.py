@@ -50,12 +50,14 @@ def _apply_cors_headers(request: Request, response: JSONResponse) -> JSONRespons
 async def unhandled_exception_handler(request: Request, exc: Exception):
     import traceback
     from datetime import datetime
-    with open("error_log.txt", "a") as f:
-        f.write(f"\n--- {datetime.now()} ---\n")
-        f.write(f"Path: {request.url.path}\n")
-        f.write(traceback.format_exc())
-        f.flush()
-        os.fsync(f.fileno())
+    import aiofiles
+
+    # Use aiofiles to write to file asynchronously, preventing event loop blocking
+    async with aiofiles.open("error_log.txt", "a") as f:
+        await f.write(f"\n--- {datetime.now()} ---\n")
+        await f.write(f"Path: {request.url.path}\n")
+        await f.write(traceback.format_exc())
+        await f.flush()
     
     logger.exception("Unhandled application error", exc_info=exc)
     detail = str(exc) if settings.DEBUG else "Internal server error"
