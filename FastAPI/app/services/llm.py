@@ -237,6 +237,54 @@ def _normalize_extraction_result(data: dict, history_text: str, messages: list) 
     }
 
 
+def _extract_json_from_text(text: str) -> dict | list | None:
+    """Safely extracts and parses JSON from a string, handling markdown and surrounding text."""
+    if not isinstance(text, str):
+        return None
+
+    text = text.strip()
+
+    # Try parsing directly
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        pass
+
+    # Attempt to remove markdown code block wrappers
+    clean_text = re.sub(r'^```(?:json)?\n?(.*?)\n?```$', r'\1', text, flags=re.DOTALL).strip()
+    try:
+        return json.loads(clean_text)
+    except json.JSONDecodeError:
+        pass
+
+    # Attempt to extract outermost JSON object or array by finding brackets
+    start_dict = text.find('{')
+    end_dict = text.rfind('}')
+
+    start_list = text.find('[')
+    end_list = text.rfind(']')
+
+    # Prioritize whichever comes first to handle cases like {"arr": []} or [{"obj": 1}]
+    candidates = []
+
+    if start_dict != -1 and end_dict != -1 and start_dict < end_dict:
+        candidates.append((start_dict, text[start_dict:end_dict+1]))
+
+    if start_list != -1 and end_list != -1 and start_list < end_list:
+        candidates.append((start_list, text[start_list:end_list+1]))
+
+    # Sort by the earliest starting index
+    candidates.sort(key=lambda x: x[0])
+
+    for _, candidate in candidates:
+        try:
+            return json.loads(candidate)
+        except json.JSONDecodeError:
+            continue
+
+    return None
+
+
 def _normalize_language(language: str | None) -> str:
     if not language:
         return "english"
@@ -433,9 +481,9 @@ async def extract_clinical_data(messages: list, target: str = "auto") -> dict:
     response_text = await generate_chat_response(extraction_messages, target=target, apply_system_prompt=False)
     
     try:
-        # Clean response text in case of markdown blocks
-        clean_text = re.sub(r'```json\n?|\n?```', '', response_text).strip()
-        data = json.loads(clean_text)
+        data = _extract_json_from_text(response_text)
+        if data is None:
+            data = {}
         return _normalize_extraction_result(data, history_text, messages)
     except Exception as e:
         print(f"Extraction failed: {e}. Raw: {response_text}")
@@ -482,13 +530,9 @@ class AIGenerator:
         messages = [{"role": "user", "content": prompt}]
         response_text = await generate_chat_response(messages, target=target, language=language)
 
-        try:
-            clean_text = re.sub(r'```json\n?|\n?```', '', response_text).strip()
-            parsed = json.loads(clean_text)
-            if isinstance(parsed, dict):
-                return parsed
-        except Exception:
-            pass
+        parsed = _extract_json_from_text(response_text)
+        if isinstance(parsed, dict):
+            return parsed
 
         return {
             "summary": response_text,
@@ -528,13 +572,9 @@ class AIGenerator:
         messages = [{"role": "user", "content": prompt}]
         response_text = await generate_chat_response(messages, target=target, language=language)
 
-        try:
-            clean_text = re.sub(r'```json\n?|\n?```', '', response_text).strip()
-            parsed = json.loads(clean_text)
-            if isinstance(parsed, dict):
-                return parsed
-        except Exception:
-            pass
+        parsed = _extract_json_from_text(response_text)
+        if isinstance(parsed, dict):
+            return parsed
 
         return {
             "summary": "We are monitoring your personal health and wellness patterns to keep you safe.",
@@ -587,9 +627,10 @@ class AIGenerator:
         response_text = await generate_chat_response(messages, target=target, apply_system_prompt=False)
 
         try:
-            clean_text = re.sub(r'```json\n?|\n?```', '', response_text).strip()
-            data = json.loads(clean_text)
-            
+            data = _extract_json_from_text(response_text)
+            if not isinstance(data, dict):
+                raise ValueError("Extracted JSON is not a dictionary")
+
             # Ensure types are correct
             refined = {
                 "refined_disease": str(data.get("refined_disease", ml_predicted_disease)),
