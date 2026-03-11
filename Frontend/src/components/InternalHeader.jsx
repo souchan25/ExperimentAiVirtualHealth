@@ -51,6 +51,7 @@ const InternalHeader = ({ onNotificationsClick, unreadCount = 0 }) => {
                 onClick={onNotificationsClick}
                 data-tour="notifications"
                 className="relative p-3 text-gray-400 hover:text-cpsu-green hover:bg-cpsu-green/5 rounded-2xl transition-all"
+                aria-label="Notifications"
               >
                 <Bell className="w-6 h-6" />
                 {unreadCount > 0 && (

@@ -84,7 +84,7 @@ const NotificationCenter = ({ isOpen, onClose }) => {
                 <button onClick={clearAll} className="text-xs font-bold text-gray-400 hover:text-red-500 transition-colors">
                   Clear All
                 </button>
-                <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors" aria-label="Close notifications">
                   <X className="w-5 h-5 text-gray-400" />
                 </button>
               </div>
