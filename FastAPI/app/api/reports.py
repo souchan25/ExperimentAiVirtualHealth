@@ -93,27 +93,51 @@ async def get_aggregated_report_data(db: AsyncSession):
         avg_wellness_stress: float
         dominant_mood: str
 
+    # Bulk fetch department statistics
     dept_query = await db.execute(select(User.department).where(User.role == "student", User.department != "").distinct())
     departments = [row[0] for row in dept_query.all() if row[0]]
     
+    # 1. Total students per department
+    total_res = await db.execute(
+        select(User.department, func.count(User.id))
+        .where(User.role == "student", User.department != "")
+        .group_by(User.department)
+    )
+    dept_totals = {row[0]: row[1] for row in total_res.all()}
+
+    # 2. Students with symptoms per department
+    symp_res = await db.execute(
+        select(User.department, func.count(func.distinct(SymptomRecord.student_id)))
+        .join(User, SymptomRecord.student_id == User.id)
+        .where(User.department != "")
+        .group_by(User.department)
+    )
+    dept_symptoms = {row[0]: row[1] for row in symp_res.all()}
+
+    # 3. Pending referrals per department
+    ref_res = await db.execute(
+        select(User.department, func.count(SymptomRecord.id))
+        .join(User, SymptomRecord.student_id == User.id)
+        .where(User.department != "", SymptomRecord.status == "referred")
+        .group_by(User.department)
+    )
+    dept_referrals = {row[0]: row[1] for row in ref_res.all()}
+
+    # 4. Average wellness stress per department
+    stress_res = await db.execute(
+        select(User.department, func.avg(WellnessCheckin.stress_level))
+        .join(User, WellnessCheckin.student_id == User.id)
+        .where(User.department != "")
+        .group_by(User.department)
+    )
+    dept_stress = {row[0]: row[1] for row in stress_res.all()}
+
     dept_stats = []
     for dept in departments:
-        total_res = await db.execute(select(func.count(User.id)).where(User.role == "student", User.department == dept))
-        total_dept_students = total_res.scalar() or 0
-        
-        symp_res = await db.execute(
-            select(func.count(func.distinct(SymptomRecord.student_id)))
-            .join(User, SymptomRecord.student_id == User.id)
-            .where(User.department == dept)
-        )
-        dept_symptom_students = symp_res.scalar() or 0
-        
-        ref_res = await db.execute(
-            select(func.count(SymptomRecord.id))
-            .join(User, SymptomRecord.student_id == User.id)
-            .where(User.department == dept, SymptomRecord.status == "referred")
-        )
-        referral_pending = ref_res.scalar() or 0
+        total_dept_students = dept_totals.get(dept, 0)
+        dept_symptom_students = dept_symptoms.get(dept, 0)
+        referral_pending = dept_referrals.get(dept, 0)
+        avg_wellness_stress = round(dept_stress.get(dept) or 0.0, 1)
 
         percentage = (dept_symptom_students / total_dept_students * 100) if total_dept_students > 0 else 0
         
@@ -128,18 +152,9 @@ async def get_aggregated_report_data(db: AsyncSession):
             acute_count=0,
             chronic_count=0,
             referral_pending_count=referral_pending,
-            avg_wellness_stress=0.0,
+            avg_wellness_stress=avg_wellness_stress,
             dominant_mood="None"
         ))
-
-    # Add wellness data to department stats
-    for stat in dept_stats:
-        stress_res = await db.execute(
-            select(func.avg(WellnessCheckin.stress_level))
-            .join(User, WellnessCheckin.student_id == User.id)
-            .where(User.department == stat.department)
-        )
-        stat.avg_wellness_stress = round(stress_res.scalar() or 0.0, 1)
     
     # 3. Symptoms Frequency Analysis (Top 10)
     # This assumes symptoms are stored in a way we can extract. 
