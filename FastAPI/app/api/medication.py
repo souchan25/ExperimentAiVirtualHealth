@@ -95,7 +95,16 @@ async def mark_log_taken(
     from datetime import datetime
     import pytz
     
-    result = await db.execute(select(MedicationLog).where(MedicationLog.id == log_id))
+    # Ensure the log belongs to the current user to prevent IDOR
+    query = (
+        select(MedicationLog)
+        .join(Medication, MedicationLog.medication_id == Medication.id)
+        .where(
+            MedicationLog.id == log_id,
+            Medication.student_id == current_user.id
+        )
+    )
+    result = await db.execute(query)
     log = result.scalars().first()
     if not log:
         raise HTTPException(status_code=404, detail="Log not found")
