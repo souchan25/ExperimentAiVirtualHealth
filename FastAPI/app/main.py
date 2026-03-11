@@ -53,10 +53,14 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
     import aiofiles
 
     # Use aiofiles to write to file asynchronously, preventing event loop blocking
+    # Sanitize inputs to prevent log injection
+    safe_path = request.url.path.replace("\n", "\\n").replace("\r", "\\r")
+    safe_traceback = traceback.format_exc().replace("\n", "\\n").replace("\r", "\\r")
+
     async with aiofiles.open("error_log.txt", "a") as f:
         await f.write(f"\n--- {datetime.now()} ---\n")
-        await f.write(f"Path: {request.url.path}\n")
-        await f.write(traceback.format_exc())
+        await f.write(f"Path: {safe_path}\n")
+        await f.write(f"Traceback: {safe_traceback}\n")
         await f.flush()
     
     logger.exception("Unhandled application error", exc_info=exc)
