@@ -1,10 +1,8 @@
 [build]
-builder = "NIXPACKS"
-buildCommand = "python -m venv /opt/venv && /opt/venv/bin/pip install -r FastAPI/requirements.txt"
-watchPatterns = ["FastAPI/**"]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
 
 [deploy]
-startCommand = "cd FastAPI && /opt/venv/bin/uvicorn app.main:app --host 0.0.0.0 --port $PORT"
 healthcheckPath = "/health"
 healthcheckTimeout = 100
 restartPolicyType = "ON_FAILURE"
