@@ -11,6 +11,7 @@ from ..schemas import ExcuseSlipResponse, ExcuseSlipCreate
 from ..auth import get_current_user
 from ..services.cloudinary_service import upload_file as cloudinary_upload
 import io
+from pathlib import Path
 
 router = APIRouter(prefix="/excuse-slips", tags=["excuse_slips"])
 
@@ -20,17 +21,14 @@ from reportlab.lib import colors
 from reportlab.lib.units import inch
 import uuid
 
-UPLOAD_DIR = "uploads/excuse_slips"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
-
 def generate_medical_slip(buffer, student, issuer, slip_in):
     c = canvas.Canvas(buffer, pagesize=letter)
     width, height = letter
     
-    # Draw Logo
-    logo_path = "d:/Expiremental/Assets/cpsu-logo.png"
-    if os.path.exists(logo_path):
-        c.drawImage(logo_path, 1*inch, height - 1.4*inch, width=0.8*inch, height=0.8*inch, mask='auto')
+    # Draw Logo - use relative path from FastAPI root
+    logo_path = Path(__file__).parent.parent.parent / "assets" / "cpsu-logo.png"
+    if logo_path.exists():
+        c.drawImage(str(logo_path), 1*inch, height - 1.4*inch, width=0.8*inch, height=0.8*inch, mask='auto')
     
     # Header Text (Aligned with Logo)
     c.setFont("Helvetica-Bold", 14)

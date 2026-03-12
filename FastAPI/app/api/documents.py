@@ -14,9 +14,6 @@ from ..services.cloudinary_service import upload_file as cloudinary_upload, dele
 
 router = APIRouter(prefix="/documents", tags=["documents"])
 
-UPLOAD_DIR = "uploads/documents"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
-
 import base64
 from ..config import settings
 

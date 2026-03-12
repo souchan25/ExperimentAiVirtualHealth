@@ -1,0 +1,41 @@
+# Files to exclude from Railway deployment
+.git/
+.gitignore
+.vscode/
+.idea/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.log
+error_log.txt
+
+# Test files
+tests/
+test_*.py
+*_test.py
+conftest.py
+
+# Development files
+.env.example
+*.md
+!RAILWAY_DEPLOY.md
+
+# Temporary files
+temp_reports/
+*.bak
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
