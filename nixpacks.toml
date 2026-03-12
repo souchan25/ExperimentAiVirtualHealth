@@ -2,10 +2,10 @@
 nixPkgs = ["python310"]
 
 [phases.install]
-cmds = ["cd FastAPI && pip install -r requirements.txt"]
+cmds = ["cd FastAPI && python -m pip install -r requirements.txt"]
 
 [phases.build]
 cmds = ["echo 'No build step required'"]
 
 [start]
-cmd = "cd FastAPI && uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+cmd = "cd FastAPI && python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT"
