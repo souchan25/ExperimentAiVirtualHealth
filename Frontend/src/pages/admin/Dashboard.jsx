@@ -6,6 +6,7 @@ import { Users, Activity, Settings, PlusCircle, CheckCircle2, ShieldAlert, Zap, 
 import CreateStaffModal from '../../components/admin/CreateStaffModal';
 import UserManagementModal from '../../components/admin/UserManagementModal';
 import SystemHealthModal from '../../components/admin/SystemHealthModal';
+import SystemPermissionsModal from '../../components/admin/SystemPermissionsModal';
 
 const ActionCard = ({ title, desc, icon: Icon, onClick, color, delay, accentColor }) => {
   return (
@@ -43,6 +44,7 @@ const AdminDashboard = () => {
   const [isStaffModalOpen, setIsStaffModalOpen] = useState(false);
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [isHealthModalOpen, setIsHealthModalOpen] = useState(false);
+  const [isPermissionsModalOpen, setIsPermissionsModalOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
   useEffect(() => {
@@ -132,6 +134,19 @@ const AdminDashboard = () => {
             color="bg-purple-50 text-purple-600"
             accentColor="bg-purple-600"
             delay={0.3}
+          />
+        </div>
+        
+        {/* Secondary Actions Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+           <ActionCard 
+            title="Permissions" 
+            desc="Global Settings"
+            icon={Settings}
+            onClick={() => setIsPermissionsModalOpen(true)}
+            color="bg-orange-50 text-orange-600"
+            accentColor="bg-orange-500"
+            delay={0.4}
           />
         </div>
 
@@ -240,6 +255,11 @@ const AdminDashboard = () => {
         <SystemHealthModal 
           isOpen={isHealthModalOpen}
           onClose={() => setIsHealthModalOpen(false)}
+        />
+
+        <SystemPermissionsModal
+          isOpen={isPermissionsModalOpen}
+          onClose={() => setIsPermissionsModalOpen(false)}
         />
 
       </div>

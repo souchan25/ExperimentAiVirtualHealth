@@ -62,9 +62,16 @@ const Footer = () => {
         </div>
 
         <div className="mt-12 pt-8 border-t border-gray-800 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-sm text-gray-500">
-            &copy; {new Date().getFullYear()} Central Philippines State University. All rights reserved.
-          </p>
+          <div>
+            <p className="text-sm text-gray-500">
+              &copy; {new Date().getFullYear()} Central Philippines State University. All rights reserved.
+            </p>
+            <p className="text-xs text-gray-600 mt-1">
+              Capstone Project by{' '}
+              <span className="text-gray-400">Cuenca · Pausa · Sumagaysay · Talapeiro</span>
+              {' '}— BSIT
+            </p>
+          </div>
           <div className="flex space-x-6">
             <a href="#" className="text-gray-500 hover:text-white transition-colors">
               <span className="sr-only">Facebook</span>

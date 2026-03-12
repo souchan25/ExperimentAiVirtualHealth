@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy import text, or_
+from sqlalchemy import text, or_, and_
 from typing import List
 from uuid import UUID
 from ..database import get_db
 from ..models import User, Message
-from ..schemas import MessageCreate, MessageResponse
+from ..schemas import MessageCreate, MessageResponse, ConversationResponse
 from ..auth import get_current_user
 
 router = APIRouter(prefix="/messages", tags=["messages"])
@@ -32,41 +32,86 @@ def _normalize_id(value) -> str:
     except Exception:
         return text_value
 
-@router.get("/", response_model=List[MessageResponse])
-async def get_messages(
+@router.get("/", response_model=List[ConversationResponse])
+async def get_conversations(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    users_result = await db.execute(select(User.id, User.name))
-    user_map = {
-        _normalize_id(row.id): row.name
-        for row in users_result.all()
-    }
-
+    """
+    Get unique conversations for the current user, showing the last message for each.
+    """
+    # This query groups messages by the other person in the conversation
+    # and picks the latest message for each.
+    # Note: SQLite/Postgres grouping can be tricky with 'latest'. Using a subquery.
+    
     result = await db.execute(
         select(Message)
         .where(or_(Message.sender_id == current_user.id, Message.recipient_id == current_user.id))
+        .order_by(Message.timestamp.desc())
+    )
+    all_messages = result.scalars().all()
+    
+    # Simple in-memory grouping for the prototype/migration
+    conversations_map = {}
+    
+    # Get all potential user IDs for names
+    user_ids = set()
+    for msg in all_messages:
+        user_ids.add(msg.sender_id)
+        user_ids.add(msg.recipient_id)
+    
+    users_result = await db.execute(select(User.id, User.name).where(User.id.in_(user_ids)))
+    user_names = {row.id: row.name for row in users_result.all()}
+
+    for msg in all_messages:
+        other_user_id = msg.recipient_id if msg.sender_id == current_user.id else msg.sender_id
+        
+        if other_user_id not in conversations_map:
+            conversations_map[other_user_id] = {
+                "id": str(other_user_id),
+                "contact_name": user_names.get(other_user_id, "Unknown"),
+                "last_message": msg.content,
+                "last_message_time": msg.timestamp.strftime("%I:%M %p") if msg.timestamp else "",
+                "unread_count": 0, # Could be calculated
+                "timestamp": msg.timestamp
+            }
+        
+        if not msg.is_read and msg.recipient_id == current_user.id:
+            conversations_map[other_user_id]["unread_count"] += 1
+
+    return list(conversations_map.values())
+
+@router.get("/{other_user_id}", response_model=List[MessageResponse])
+async def get_conversation_messages(
+    other_user_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get full message history between current user and another user.
+    """
+    result = await db.execute(
+        select(Message)
+        .where(
+            or_(
+                and_(Message.sender_id == current_user.id, Message.recipient_id == other_user_id),
+                and_(Message.sender_id == other_user_id, Message.recipient_id == current_user.id)
+            )
+        )
         .order_by(Message.timestamp.asc())
     )
-
+    
     rows = result.scalars().all()
     serialized = []
     for row in rows:
-        sender_id = _normalize_id(row.sender_id)
-        recipient_id = _normalize_id(row.recipient_id)
-
-        serialized.append(
-            {
-                "id": _normalize_id(row.id),
-                "sender_id": sender_id,
-                "recipient_id": recipient_id,
-                "sender_name": user_map.get(sender_id),
-                "recipient_name": user_map.get(recipient_id),
-                "content": row.content,
-                "is_read": bool(row.is_read),
-                "timestamp": row.timestamp,
-            }
-        )
+        serialized.append({
+            "id": _normalize_id(row.id),
+            "sender_id": row.sender_id,
+            "recipient_id": row.recipient_id,
+            "content": row.content,
+            "is_read": bool(row.is_read),
+            "timestamp": row.timestamp,
+        })
     return serialized
 
 @router.post("/", response_model=MessageResponse)

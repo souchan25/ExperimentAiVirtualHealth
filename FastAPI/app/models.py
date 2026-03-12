@@ -468,3 +468,16 @@ class CampusAlert(Base):
     created_by_id = Column(BigInteger, ForeignKey("users.id"))
 
     created_by = relationship("User")
+
+class SystemSettings(Base):
+    __tablename__ = "system_settings"
+
+    id = Column(Integer, primary_key=True)
+    setting_key = Column(String(100), unique=True, index=True, nullable=False)
+    setting_value = Column(JSON, nullable=False)
+    description = Column(Text, default="")
+    
+    updated_at = Column(DateTime(timezone=True), default=func.now(), server_default=func.now(), onupdate=func.now())
+    updated_by_id = Column(BigInteger, ForeignKey("users.id"), nullable=True)
+
+    updated_by = relationship("User")

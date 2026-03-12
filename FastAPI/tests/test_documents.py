@@ -50,8 +50,8 @@ async def test_upload_document_success(client):
             mock_create.return_value = mock_response
             mock_openai_instance.chat.completions.create = mock_create
 
-            # The app falls back to OPENAI_API_KEY if ZENMUX_API_KEY is not set.
-            with patch("app.api.documents.settings.ZENMUX_API_KEY", "test-key-123"):
+            # Ensure the Gemini API key is set so the vision extraction path runs.
+            with patch("app.api.documents.settings.GEMINI_API_KEY", "test-key-123"):
 
                 # Make the request
                 data = {"document_type": "lab_result"}

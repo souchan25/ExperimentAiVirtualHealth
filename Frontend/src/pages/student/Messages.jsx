@@ -41,16 +41,15 @@ const StudentMessages = () => {
   const fetchInitialData = async () => {
     try {
       setLoading(true);
-      const [msgData, staffData] = await Promise.all([
-        messageService.getMessages(),
-        authService.getUsers()
-      ]);
-      setMessages(msgData);
+      const staffData = await authService.getUsers();
       setStaff(staffData);
       
       // Select the first staff member by default if available
       if (staffData.length > 0 && !selectedStaff) {
         setSelectedStaff(staffData[0]);
+        // Also fetch messages for this staff member
+        const msgData = await messageService.getConversationMessages(staffData[0].id);
+        setMessages(msgData);
       }
     } catch (err) {
       console.error('Failed to fetch initial data:', err);
@@ -60,8 +59,9 @@ const StudentMessages = () => {
   };
 
   const fetchMessages = async () => {
+    if (!selectedStaff) return;
     try {
-      const data = await messageService.getMessages();
+      const data = await messageService.getConversationMessages(selectedStaff.id);
       setMessages(data);
     } catch (err) {
       console.error('Polling error:', err);
@@ -84,9 +84,7 @@ const StudentMessages = () => {
     }
   };
 
-  const filteredConversation = messages.filter(msg => 
-    selectedStaff && (msg.sender_id === selectedStaff.id || msg.recipient_id === selectedStaff.id)
-  );
+  const filteredConversation = messages;
 
   return (
     <div className="max-w-6xl mx-auto h-[calc(100vh-180px)] flex gap-6">
@@ -109,7 +107,13 @@ const StudentMessages = () => {
             staff.map(member => (
               <button
                 key={member.id}
-                onClick={() => setSelectedStaff(member)}
+                onClick={() => {
+                  setSelectedStaff(member);
+                  // Immediately fetch messages for the new selection
+                  messageService.getConversationMessages(member.id)
+                    .then(setMessages)
+                    .catch(console.error);
+                }}
                 className={`w-full flex items-center p-4 rounded-2xl transition-all duration-200 ${
                   selectedStaff?.id === member.id 
                     ? 'bg-green-600 text-white shadow-lg shadow-green-100' 

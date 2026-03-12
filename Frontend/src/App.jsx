@@ -3,9 +3,12 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import Features from './components/Features';
+import Stats from './components/Stats';
+import ForWho from './components/ForWho';
 import HowItWorks from './components/HowItWorks';
 import FAQ from './components/FAQ';
 import About from './components/About';
+import CTA from './components/CTA';
 import Footer from './components/Footer';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -29,6 +32,7 @@ import StudentProfile from './pages/student/Profile';
 import StudentAppointments from './pages/student/Appointments';
 import StudentMessages from './pages/student/Messages';
 import Settings from './pages/Settings';
+import UserGuide from './pages/UserGuide';
 
 import StaffDashboard from './pages/staff/Dashboard';
 import StaffMedicalRecords from './pages/staff/MedicalRecords';
@@ -49,9 +53,12 @@ const LandingPage = () => (
     <main className="flex-1">
       <Hero />
       <Features />
+      <Stats />
+      <ForWho />
       <HowItWorks />
       <About />
       <FAQ />
+      <CTA />
     </main>
     <Footer />
   </div>
@@ -59,6 +66,7 @@ const LandingPage = () => (
 
 import ConsentGate from './components/ConsentGate';
 import AuditLogs from './pages/admin/AuditLogs';
+import FloatingAssistant from './components/FloatingAssistant';
 
 import NotificationCenter from './components/NotificationCenter';
 import { notificationService, settingsService } from './api/service';
@@ -127,6 +135,7 @@ const InternalLayout = ({ children }) => {
             fetchUnreadCount(); // Refresh count when closing
           }} 
         />
+        <FloatingAssistant role={user.role || 'student'} />
       </div>
     </ConsentGate>
   );
@@ -163,6 +172,7 @@ function App() {
             <Route path="/student/appointments" element={<InternalLayout><StudentAppointments /></InternalLayout>} />
             <Route path="/student/messages" element={<InternalLayout><StudentMessages /></InternalLayout>} />
             <Route path="/student/settings" element={<InternalLayout><Settings /></InternalLayout>} />
+            <Route path="/student/guide" element={<InternalLayout><UserGuide /></InternalLayout>} />
           </Route>
 
           {/* Staff Routes */}
@@ -176,6 +186,7 @@ function App() {
             <Route path="/staff/messages" element={<InternalLayout><StaffMessages /></InternalLayout>} />
             <Route path="/staff/emergency-map" element={<InternalLayout><EmergencyMap /></InternalLayout>} />
             <Route path="/staff/settings" element={<InternalLayout><Settings /></InternalLayout>} />
+            <Route path="/staff/guide" element={<InternalLayout><UserGuide /></InternalLayout>} />
           </Route>
 
           {/* Admin Routes */}

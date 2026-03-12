@@ -39,10 +39,10 @@ async def upload_document(
     extracted_data = {}
     ai_confidence = 0.0
     
-    # AI Extraction (Vision)
-    vision_model = "z-ai/glm-4.6v-flash-free"
-    api_key = settings.ZENMUX_API_KEY or settings.OPENAI_API_KEY
-    base_url = "https://zenmux.ai/api/v1" if settings.ZENMUX_API_KEY else None
+    # AI Extraction (Vision via Gemini OpenAI-compatible API)
+    vision_model = "gemini-2.5-flash"
+    api_key = settings.GEMINI_API_KEY
+    base_url = "https://generativelanguage.googleapis.com/v1beta/openai/"
     
     if api_key:
         try:
@@ -50,9 +50,6 @@ async def upload_document(
             from openai import AsyncOpenAI
             client = AsyncOpenAI(api_key=api_key, base_url=base_url)
             
-            # Use the secure URL instead of base64 if the model supports it, 
-            # but here it uses a data URL with base64. Let's keep base64 for now but read it differently.
-            # Actually, let's try to pass the Cloudinary URL.
             image_url = cloudinary_url
             
             response = await client.chat.completions.create(
@@ -60,7 +57,16 @@ async def upload_document(
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are a clinical document parser. Extract JSON data from the medical image. Fields: patient_name, date, test_type, results (list of key-value), summary."
+                        "content": (
+                            "You are a clinical document parser. Extract data from the medical image and return ONLY a valid JSON object "
+                            "with exactly these fields:\n"
+                            "- patient_name (string): full name of the patient, or null if not found\n"
+                            "- date (string): test or issue date in YYYY-MM-DD format, or null if not found\n"
+                            "- test_type (string): type of document e.g. 'Blood Test', 'Medical Certificate', 'X-Ray'\n"
+                            "- results (array): list of findings, each as {\"key\": \"finding_name\", \"value\": \"finding_value\"}\n"
+                            "- summary (string): one-paragraph clinical summary of the document content\n"
+                            "Return ONLY the JSON object. Do not include markdown fences or any extra text."
+                        )
                     },
                     {
                         "role": "user",
@@ -72,12 +78,18 @@ async def upload_document(
                 ]
             )
             content = response.choices[0].message.content
-            # Clean markdown code blocks if present
-            if content.startswith("```"):
-                content = content.split("```")[1]
-                if content.startswith("json"):
-                    content = content[4:]
-                content = content.split("```")[0].strip()
+            # Clean and extract just the JSON part
+            import re
+            json_match = re.search(r'\{.*\}', content, re.DOTALL)
+            if json_match:
+                content = json_match.group(0)
+            else:
+                # Fallback to older cleanup
+                if "```" in content:
+                    content = content.split("```")[1]
+                    if content.startswith("json"):
+                        content = content[4:]
+                content = content.strip()
             
             import json
             extracted_data = json.loads(content)
@@ -101,6 +113,33 @@ async def upload_document(
     
     return db_document
 
+@router.get("/{document_id}/download")
+async def download_document(
+    document_id: uuid.UUID,
+    token: Optional[str] = None,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    print(f"Download request for document: {document_id} by user: {current_user.school_id}")
+    # Find the document
+    result = await db.execute(select(MedicalDocument).where(MedicalDocument.id == document_id))
+    db_document = result.scalar_one_or_none()
+    
+    if not db_document:
+        print(f"Document {document_id} not found in database")
+        raise HTTPException(status_code=404, detail="Document not found")
+        
+    # Permission check
+    if current_user.role not in ["staff", "admin"] and db_document.student_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized")
+        
+    if not db_document.file_path:
+        raise HTTPException(status_code=404, detail="File path not found")
+        
+    # Redirect to the Cloudinary URL
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url=db_document.file_path)
+
 @router.get("/", response_model=List[MedicalDocumentResponse])
 async def list_documents(
     current_user: User = Depends(get_current_user),
@@ -116,7 +155,7 @@ async def list_documents(
 
 @router.delete("/{document_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_document(
-    document_id: str,
+    document_id: uuid.UUID,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):

@@ -95,7 +95,17 @@ const StaffDashboard = () => {
   };
 
   return (
-    <div className="space-y-10 animate-in fade-in duration-700">
+    <div className="relative -m-6 p-6 min-h-[calc(100vh-80px)] animate-in fade-in duration-700">
+      {/* Background Image */}
+      <div 
+        className="absolute inset-0 z-0 bg-cover bg-center bg-fixed"
+        style={{ backgroundImage: "url('/clinic.png')" }}
+      />
+      {/* Semi-transparent Overlay for Readability */}
+      <div className="absolute inset-0 z-0 bg-white/90 backdrop-blur-[2px]" />
+
+      {/* Content Container */}
+      <div className="relative z-10 space-y-10">
       {/* Welcome Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-2">
         <div>
@@ -271,6 +281,7 @@ const StaffDashboard = () => {
             onClick={() => navigate('/staff/messages')}
           />
         </div>
+      </div>
       </div>
     </div>
   );

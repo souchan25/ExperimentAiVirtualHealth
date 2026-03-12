@@ -50,15 +50,15 @@ def _apply_cors_headers(request: Request, response: JSONResponse) -> JSONRespons
 async def unhandled_exception_handler(request: Request, exc: Exception):
     import traceback
     from datetime import datetime
-    import aiofiles
 
-    # Use aiofiles to write to file asynchronously, preventing event loop blocking
-    async with aiofiles.open("error_log.txt", "a") as f:
-        await f.write(f"\n--- {datetime.now()} ---\n")
-        await f.write(f"Path: {request.url.path}\n")
-        await f.write(traceback.format_exc())
-        await f.flush()
-    
+    try:
+        with open("error_log.txt", "a") as f:
+            f.write(f"\n--- {datetime.now()} ---\n")
+            f.write(f"Path: {request.url.path}\n")
+            f.write(traceback.format_exc())
+    except Exception:
+        pass
+
     logger.exception("Unhandled application error", exc_info=exc)
     detail = str(exc) if settings.DEBUG else "Internal server error"
     response = JSONResponse(status_code=500, content={"detail": detail})
@@ -99,7 +99,7 @@ async def health_detail(db: AsyncSession = Depends(get_db)):
         "uptime": "stable"
     }
 
-from .api import auth, clinic, emergency, chat, medication, followup, staff, documents, excuse_slips, inventory, wellness, notifications, knowledge, alerts, profile, appointments, messages, reports, audit, settings as settings_router
+from .api import auth, clinic, emergency, chat, medication, followup, staff, documents, excuse_slips, inventory, wellness, notifications, knowledge, alerts, profile, appointments, messages, reports, audit, settings as settings_router, stats as stats_router
 
 # Register Routers
 app.include_router(auth.router)
@@ -122,3 +122,4 @@ app.include_router(messages.router)
 app.include_router(reports.router)
 app.include_router(audit.router)
 app.include_router(settings_router.router)
+app.include_router(stats_router.router)

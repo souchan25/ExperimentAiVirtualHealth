@@ -10,7 +10,8 @@ const StudentProfile = () => {
     allergies: '',
     pre_existing_conditions: '',
     emergency_contact_name: '',
-    emergency_contact_phone: ''
+    emergency_contact_phone: '',
+    cpsu_address: ''
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -30,7 +31,8 @@ const StudentProfile = () => {
         allergies: data.allergies || '',
         pre_existing_conditions: data.pre_existing_conditions || '',
         emergency_contact_name: data.emergency_contact_name || '',
-        emergency_contact_phone: data.emergency_contact_phone || ''
+        emergency_contact_phone: data.emergency_contact_phone || '',
+        cpsu_address: data.cpsu_address || ''
       });
     } catch (err) {
       console.error(err);
@@ -119,6 +121,16 @@ const StudentProfile = () => {
                 <option value="O-">O-</option>
               </select>
             </div>
+          </div>
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Current Address</label>
+            <input 
+              type="text" 
+              className="w-full p-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-green-500 outline-none"
+              placeholder="e.g. Brgy. 1, Kabankalan City"
+              value={profile.cpsu_address}
+              onChange={(e) => setProfile({...profile, cpsu_address: e.target.value})}
+            />
           </div>
         </div>
 

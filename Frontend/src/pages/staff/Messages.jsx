@@ -24,8 +24,9 @@ const StaffMessages = () => {
 
     // Refresh message state while this page is open.
     const intervalId = setInterval(async () => {
+      if (!selectedStudent) return;
       try {
-        const msgData = await messageService.getMessages();
+        const msgData = await messageService.getConversationMessages(selectedStudent.id);
         setMessages(msgData);
       } catch (err) {
         console.error(err);
@@ -51,13 +52,16 @@ const StaffMessages = () => {
     try {
       setLoading(true);
       setLoadError('');
-      const [msgData, userData] = await Promise.all([
-        messageService.getMessages(),
-        authService.getUsers()
-      ]);
-      setMessages(msgData);
+      const userData = await authService.getUsers();
       // Filter only students
-      setStudents(userData.filter(u => u.role === 'student'));
+      const studentList = userData.filter(u => u.role === 'student');
+      setStudents(studentList);
+      
+      if (studentList.length > 0 && !selectedStudent) {
+        setSelectedStudent(studentList[0]);
+        const msgData = await messageService.getConversationMessages(studentList[0].id);
+        setMessages(msgData);
+      }
     } catch (err) {
       console.error(err);
       setLoadError('Unable to load student list. Please refresh or re-login.');
@@ -75,7 +79,7 @@ const StaffMessages = () => {
         content: newMessage
       });
       setNewMessage('');
-      const updatedMessages = await messageService.getMessages();
+      const updatedMessages = await messageService.getConversationMessages(selectedStudent.id);
       setMessages(updatedMessages);
     } catch (err) {
       console.error(err);
@@ -87,9 +91,7 @@ const StaffMessages = () => {
     s.school_id.includes(searchTerm)
   );
 
-  const selectedConversation = messages.filter(msg => 
-    selectedStudent && (msg.sender_id === selectedStudent.id || msg.recipient_id === selectedStudent.id)
-  );
+  const selectedConversation = messages;
 
   const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
 
@@ -119,7 +121,12 @@ const StaffMessages = () => {
           {filteredStudents.map(student => (
             <button
               key={student.id}
-              onClick={() => setSelectedStudent(student)}
+              onClick={() => {
+                setSelectedStudent(student);
+                messageService.getConversationMessages(student.id)
+                  .then(setMessages)
+                  .catch(console.error);
+              }}
               className={`w-full flex items-center p-4 rounded-2xl transition-all ${
                 selectedStudent?.id === student.id 
                   ? 'bg-cpsu-green text-white shadow-lg shadow-cpsu-green/20' 

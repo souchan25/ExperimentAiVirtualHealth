@@ -52,6 +52,7 @@ class SymptomResponse(SymptomBase):
 
 
 class SymptomAssessmentResponse(SymptomResponse):
+    reasoning: str = ""
     summary: str = ""
     recommendations: List[str] = []
     red_flags: List[str] = []
@@ -373,6 +374,17 @@ class AppointmentResponse(AppointmentBase):
     class Config:
         from_attributes = True
 
+class ConversationResponse(BaseModel):
+    id: str
+    contact_name: str
+    last_message: str
+    last_message_time: str
+    unread_count: int
+    timestamp: datetime
+
+    class Config:
+        from_attributes = True
+
 # Message Schemas
 class MessageCreate(BaseModel):
     recipient_id: int
@@ -435,3 +447,24 @@ class ForgotPassword(BaseModel):
 class ResetPassword(BaseModel):
     token: str
     new_password: str
+
+# System Settings Schemas
+class SystemSettingsBase(BaseModel):
+    setting_key: str
+    setting_value: dict
+    description: Optional[str] = ""
+
+class SystemSettingsCreate(SystemSettingsBase):
+    pass
+
+class SystemSettingsUpdate(BaseModel):
+    setting_value: Optional[dict] = None
+    description: Optional[str] = None
+
+class SystemSettingsResponse(SystemSettingsBase):
+    id: int
+    updated_at: datetime
+    updated_by_id: Optional[int] = None
+
+    class Config:
+        from_attributes = True

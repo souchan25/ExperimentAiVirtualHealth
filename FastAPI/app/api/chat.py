@@ -47,15 +47,40 @@ async def send_message(
             language = session.language or "english"
             
     # Generate LLM Response
-    response_text = await ai_generator.generate_chat_response(
-        msg_in.message,
-        language=language,
-        history=msg_in.history,
-    )
+    try:
+        response_text = await ai_generator.generate_chat_response(
+            msg_in.message,
+            language=language,
+            history=msg_in.history,
+        )
+    except Exception as e:
+        print(f"Error calling AI generator: {e}")
+        response_text = f"I'm sorry, I encountered an error: {str(e)}"
     
     return {
-        "reply": response_text,
+        "reply": response_text or "I'm sorry, I couldn't generate a response.",
         "session_id": str(session.id) if session else None
+    }
+
+@router.post("/system")
+async def send_system_message(
+    msg_in: ChatMessage,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    try:
+        response_text = await ai_generator.generate_system_response(
+            message=msg_in.message,
+            role=current_user.role,
+            target="mistral",
+            history=msg_in.history
+        )
+    except Exception as e:
+        print(f"Error calling AI generator for system message: {e}")
+        response_text = f"I'm sorry, I encountered an error: {str(e)}"
+        
+    return {
+        "reply": response_text
     }
 
 @router.post("/end")

@@ -13,7 +13,8 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   MapIcon,
-  Cog6ToothIcon
+  Cog6ToothIcon,
+  BookOpenIcon
 } from '@heroicons/react/24/outline';
 import { useLanguage } from '../LanguageContext';
 
@@ -32,6 +33,7 @@ const Sidebar = ({ role }) => {
     { name: t('messages'), path: '/student/messages', icon: EnvelopeIcon },
     { name: t('profile'), path: '/student/profile', icon: UserCircleIcon },
     { name: t('first_aid'), path: '/student/knowledge', icon: ShieldCheckIcon },
+    { name: t('user_guide') || 'User Guide', path: '/student/guide', icon: BookOpenIcon },
     { name: t('settings'), path: '/student/settings', icon: Cog6ToothIcon },
   ];
 
@@ -44,6 +46,7 @@ const Sidebar = ({ role }) => {
     { name: t('appointments'), path: '/staff/appointments', icon: CalendarIcon },
     { name: t('reports'), path: '/staff/reports', icon: ChartBarIcon },
     { name: t('messages'), path: '/staff/messages', icon: EnvelopeIcon },
+    { name: t('user_guide') || 'User Guide', path: '/staff/guide', icon: BookOpenIcon },
     { name: t('settings'), path: '/staff/settings', icon: Cog6ToothIcon },
   ];
 

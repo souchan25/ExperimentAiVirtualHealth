@@ -200,14 +200,6 @@ const DiagnosisCard = ({ data }) => {
               <span className="text-sm font-bold text-cpsu-green">%</span>
             </div>
           </div>
-          <div className="flex gap-2.5">
-            <button className="group flex items-center gap-2 px-4 py-2 bg-white/10 text-white rounded-xl font-bold text-xs hover:bg-white hover:text-slate-900 transition-all duration-300 border border-white/10 hover:border-white shadow-lg shadow-black/20">
-              <Download className="w-4 h-4 group-hover:scale-110 transition-transform" /> Save PDF
-            </button>
-            <button className="group flex items-center gap-2 px-5 py-2 bg-cpsu-green text-white rounded-xl font-black text-xs hover:bg-cpsu-green-dark transition-all duration-300 shadow-xl shadow-cpsu-green/30 hover:shadow-cpsu-green/50 active:scale-95">
-              Next Steps <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </button>
-          </div>
         </div>
       </div>
       

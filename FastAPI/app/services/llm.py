@@ -304,9 +304,30 @@ JSON Structure:
 - If the user uses the "Start AI Diagnostic" form (which already collects temperature, pain scale, duration, and symptoms), skip Phase 1 entirely and go directly to Phase 2.
 - Do not repeat questions already answered in the conversation.
 - Keep your tone warm, concise, and human — like a supportive health companion.
+- **RESTRICTION**: You are ONLY allowed to answer health, medical, wellness, and symptom-related queries. If the user asks about anything else (e.g., cooking recipes like spaghetti, math, coding, general trivia), politely refuse and remind them that you are a medical assistant. Example: "I'm sorry, I am a virtual health assistant and can only help with medical or health-related questions."
 
 User Health Context:
 {health_context}
+"""
+
+SYSTEM_ASSISTANT_PROMPT = """You are a helpful, professional, and friendly AI System Guide for the Central Philippines State University (CPSU) Virtual Health App.
+Your primary role is to assist users with navigating and using the application based on their role ({user_role}).
+
+## Language Rule (STRICT)
+- Selected language: english
+- Respond in english only.
+
+## Core Rules:
+1. **Role-Awareness**: You know the user's role is {user_role}. Only suggest features that are relevant to this role.
+    - **Student/Patient**: Can book appointments, take symptom assessments (Chat/Symptom Checker), view their records, view prescriptions, view excuse slips, setup pillbox reminders, and update their profile.
+    - **Doctor**: Can view patient queues, manage appointments, write medical notes/prescriptions, issue excuse slips, and view patient histories.
+    - **Admin/Nurse/Staff**: Can manage inventory, oversee the clinic dashboard, handle walk-in triage, and generate reports.
+2. **System Navigation Only**: Guide the user concisely on where to go or how to use a feature. For example, "To check your symptoms, please tap on the Symptom Checker feature from your dashboard."
+3. **No Medical Diagnosis**: Do NOT attempt to diagnose, prescribe, or offer medical advice in this mode. If the user mentions health symptoms or asks a medical question, politely redirect them to the Symptom Checker feature. Example: "I am the system guide. For medical questions or to check your symptoms, please use the Symptom Checker tool on your dashboard."
+4. **Tone & Formatting**: Warm, concise, and helpful. You MUST format lists using markdown bullets lines (starting with "- ") so they look beautiful on the frontend. Use bolding (**text**) for emphasis on important features. Do not dump sentences in a single paragraph if summarizing multiple items.
+
+User Query Context:
+The user has opened the help assistant. Respond directly to their query.
 """
 
 async def generate_chat_response(
@@ -384,7 +405,8 @@ async def generate_chat_response(
             last_error = e
             continue
 
-    return f"I'm sorry, I'm having trouble connecting to my service right now. All free-tier providers are currently exhausted or unavailable. Please try again later. Error: {str(last_error)}"
+    error_detail = f" (Error: {str(last_error)})" if last_error else ""
+    return f"I'm sorry, I am currently experiencing high traffic or service limitations. Please try again in a moment.{error_detail}"
 
 # Disease prediction endpoint helper
 async def predict_disease(symptoms: list, target: str = "auto") -> dict:
@@ -496,6 +518,28 @@ class AIGenerator:
             "red_flags": [],
             "disclaimer": "The AI is not a medical professional. Please consult a qualified healthcare provider.",
         }
+
+    async def generate_system_response(
+        self,
+        message: str,
+        role: str,
+        target: str = "mistral",
+        history: list | None = None,
+    ) -> str:
+        """Handle system navigation and feature queries using the system assistant prompt."""
+        formatted_prompt = SYSTEM_ASSISTANT_PROMPT.format(user_role=role)
+        
+        messages = [{"role": "system", "content": formatted_prompt}]
+        if history:
+            for item in history:
+                h_role = item.get("role")
+                content = item.get("content")
+                if h_role in {"user", "assistant"} and content:
+                    messages.append({"role": h_role, "content": content})
+                    
+        messages.append({"role": "user", "content": message})
+        
+        return await generate_chat_response(messages, target=target, apply_system_prompt=False)
 
 
     async def generate_personal_trends(

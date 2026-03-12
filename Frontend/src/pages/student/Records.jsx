@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { FileText, ArrowLeft, UploadCloud, Loader2, CheckCircle2, AlertCircle, Trash2, ExternalLink, Sparkles, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { documentService, studentService, excuseSlipService } from '../../api/service';
+import { documentService, studentService, excuseSlipService, settingsService } from '../../api/service';
 
 const Records = () => {
   const [documents, setDocuments] = useState([]);
   const [symptomHistory, setSymptomHistory] = useState([]);
   const [excuseSlips, setExcuseSlips] = useState([]);
+  const [canDeleteRecords, setCanDeleteRecords] = useState(false);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(null);
@@ -20,14 +21,23 @@ const Records = () => {
   const fetchRecords = async () => {
     try {
       setLoading(true);
-      const [docs, history, slips] = await Promise.all([
+      const [docs, history, slips, sysSettings] = await Promise.all([
         documentService.getDocuments(),
         studentService.getSymptomHistory(),
         excuseSlipService.getExcuseSlips(),
+        settingsService.getSystemSettings().catch(() => [])
       ]);
       setDocuments(docs);
       setSymptomHistory(history || []);
       setExcuseSlips(slips || []);
+      
+      const deleteSetting = sysSettings.find(s => s.setting_key === 'student_can_delete_records');
+      if (deleteSetting && deleteSetting.setting_value?.enabled) {
+        setCanDeleteRecords(true);
+      } else {
+        setCanDeleteRecords(false);
+      }
+
       setError(null);
     } catch (err) {
       console.error('Failed to fetch records:', err);
@@ -263,13 +273,15 @@ const Records = () => {
                         >
                           <Sparkles className="w-5 h-5" />
                         </button>
-                        <button 
-                          onClick={() => handleDelete(doc.id)}
-                          className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-                          title="Delete Record"
-                        >
-                          <Trash2 className="w-5 h-5" />
-                        </button>
+                        {canDeleteRecords && (
+                          <button 
+                            onClick={() => handleDelete(doc.id)}
+                            className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                            title="Delete Record"
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </button>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -390,16 +402,30 @@ const Records = () => {
                     <div>
                       <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Key Findings</p>
                       <div className="space-y-2">
-                        {selectedDocForAI.extracted_data.results.map((result, idx) => (
-                          <div key={idx} className="flex items-center justify-between p-3 bg-white border border-gray-100 rounded-xl">
-                            <span className="text-sm font-medium text-gray-600">
-                              {typeof result === 'object' ? Object.keys(result)[0] : 'Result'}
-                            </span>
-                            <span className="text-sm font-bold text-gray-900">
-                              {typeof result === 'object' ? Object.values(result)[0] : result}
-                            </span>
-                          </div>
-                        ))}
+                        {selectedDocForAI.extracted_data.results.map((result, idx) => {
+                          let label, value;
+                          if (typeof result === 'object' && result !== null) {
+                            if (result.key !== undefined) {
+                              // Standard format: { key: "...", value: "..." }
+                              label = result.key;
+                              value = result.value;
+                            } else {
+                              // Fallback for arbitrary single-pair objects like { "cholesterol": "elevated" }
+                              const entries = Object.entries(result);
+                              label = entries[0]?.[0] ?? 'Finding';
+                              value = entries[0]?.[1] ?? '—';
+                            }
+                          } else {
+                            label = 'Finding';
+                            value = result;
+                          }
+                          return (
+                            <div key={idx} className="flex items-center justify-between p-3 bg-white border border-gray-100 rounded-xl">
+                              <span className="text-sm font-medium text-gray-600">{label}</span>
+                              <span className="text-sm font-bold text-gray-900">{String(value)}</span>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   )}

@@ -109,6 +109,7 @@ async def submit_symptoms(
         "is_communicable": db_symptom.is_communicable,
         "is_acute": db_symptom.is_acute,
         "created_at": db_symptom.created_at,
+        "reasoning": refined.get("reasoning", ""),
         "summary": insights.get("summary", ""),
         "recommendations": insights.get("recommendations", []),
         "red_flags": insights.get("red_flags", []),

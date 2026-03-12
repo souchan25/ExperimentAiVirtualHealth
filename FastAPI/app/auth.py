@@ -60,7 +60,7 @@ def get_password_hash(password: str) -> str:
     return bcrypt.hashpw(_prehash(password), bcrypt.gensalt()).decode("utf-8")
 
 from jose import jwt, JWTError
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Query
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -80,14 +80,25 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
+async def get_current_user(
+    token_header: str = Depends(oauth2_scheme), 
+    token_query: Optional[str] = Query(None, alias="token"),
+    db: AsyncSession = Depends(get_db)
+):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
+
+    # Try header first, then query param
+    final_token = token_header if token_header and token_header != "" else token_query
+    
+    if not final_token:
+        raise credentials_exception
+        
     try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(final_token, settings.SECRET_KEY, algorithms=[ALGORITHM])
         school_id: str = payload.get("sub")
         if school_id is None:
             raise credentials_exception
@@ -113,3 +124,13 @@ async def get_optional_user(token: Optional[str] = Depends(optional_oauth2_schem
         return result.scalars().first()
     except JWTError:
         return None
+
+def require_role(roles: list[str]):
+    async def role_checker(current_user: User = Depends(get_current_user)):
+        if current_user.role not in roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Operation not permitted"
+            )
+        return current_user
+    return role_checker

@@ -96,6 +96,10 @@ export const chatService = {
   endSession: async (sessionId, history = []) => {
     const response = await api.post(`/chat/end?session_id=${sessionId}`, history);
     return response.data;
+  },
+  sendSystemMessage: async (message, history = []) => {
+    const response = await api.post('/chat/system', { message, history });
+    return response.data;
   }
 };
 
@@ -273,6 +277,10 @@ export const messageService = {
     const response = await api.get('/messages/');
     return response.data;
   },
+  getConversationMessages: async (otherUserId) => {
+    const response = await api.get(`/messages/${otherUserId}`);
+    return response.data;
+  },
   sendMessage: async (data) => {
     const response = await api.post('/messages/', data);
     return response.data;
@@ -341,6 +349,10 @@ export const settingsService = {
   },
   changePassword: async (data) => {
     const response = await api.post('/settings/password', data);
+    return response.data;
+  },
+  getSystemSettings: async () => {
+    const response = await api.get('/settings/system');
     return response.data;
   }
 };
