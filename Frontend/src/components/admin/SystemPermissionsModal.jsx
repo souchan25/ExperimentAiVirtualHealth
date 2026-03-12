@@ -5,7 +5,7 @@ import axios from 'axios';
 
 // Since this is just an admin settings panel, we use axios directly with the token
 const getToken = () => localStorage.getItem('token');
-const API_URL = 'http://localhost:8000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 const SystemPermissionsModal = ({ isOpen, onClose }) => {
   const [settings, setSettings] = useState([]);
