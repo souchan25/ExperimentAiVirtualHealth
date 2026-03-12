@@ -258,7 +258,7 @@ const Records = () => {
                       
                       <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <a 
-                          href={`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/${doc.file_path}`} 
+                          href={doc.file_path?.startsWith('http') ? doc.file_path : `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/${doc.file_path}`} 
                           target="_blank" 
                           rel="noopener noreferrer"
                           className="p-2 text-gray-400 hover:text-cpsu-green hover:bg-cpsu-green-50 rounded-lg transition-all"
@@ -321,7 +321,7 @@ const Records = () => {
                       
                       <div className="flex items-center gap-2">
                         <a 
-                          href={`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/${slip.file_path}`} 
+                          href={slip.file_path?.startsWith('http') ? slip.file_path : `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/${slip.file_path}`} 
                           target="_blank" 
                           rel="noopener noreferrer"
                           className="px-4 py-2 bg-gray-50 text-gray-600 font-black text-[10px] uppercase tracking-widest rounded-lg hover:bg-cpsu-gold hover:text-white transition-all flex items-center gap-2"

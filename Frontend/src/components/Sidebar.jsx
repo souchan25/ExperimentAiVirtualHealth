@@ -18,7 +18,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { useLanguage } from '../LanguageContext';
 
-const Sidebar = ({ role }) => {
+const Sidebar = ({ role, isOpen, setIsOpen }) => {
   const [isCollapsed, setIsCollapsed] = useState(true);
   const location = useLocation();
   const { t } = useLanguage();
@@ -62,29 +62,35 @@ const Sidebar = ({ role }) => {
   return (
     <div 
       data-tour="sidebar"
-      className={`bg-white border-r border-gray-100 transition-all duration-500 ease-in-out flex flex-col ${
-        isCollapsed ? 'w-20' : 'w-64'
-      } h-screen sticky top-0 shadow-lg z-40`}
+      className={`bg-white border-r border-gray-100 transition-all duration-500 ease-in-out flex flex-col fixed inset-y-0 left-0 z-50 lg:sticky lg:top-0 ${
+        isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+      } ${
+        isCollapsed ? 'lg:w-20 w-64' : 'w-64'
+      } h-screen shadow-2xl lg:shadow-lg`}
     >
       <div className="p-4 flex items-center justify-between border-b border-gray-50 bg-gradient-to-r from-white to-gray-50/50">
-        {!isCollapsed && (
-          <div className="flex flex-col">
-            <span className="font-black text-cpsu-green text-sm uppercase tracking-tighter">CPSU Portal</span>
-            <span className="font-bold text-gray-800 text-xs capitalize leading-none">
-              {role === 'student' ? 'Student Dashboard' : `${role} Dashboard`}
-            </span>
-          </div>
-        )}
+        <div className={`flex flex-col transition-opacity duration-300 ${isCollapsed ? 'lg:hidden' : 'opacity-100'}`}>
+          <span className="font-black text-cpsu-green text-sm uppercase tracking-tighter">CPSU Portal</span>
+          <span className="font-bold text-gray-800 text-xs capitalize leading-none">
+            {role === 'student' ? 'Student Dashboard' : `${role} Dashboard`}
+          </span>
+        </div>
         <button 
           onClick={() => setIsCollapsed(!isCollapsed)}
           data-tour="sidebar-toggle"
-          className={`p-2 rounded-xl transition-all duration-300 ${
+          className={`p-2 rounded-xl transition-all duration-300 hidden lg:block ${
             isCollapsed 
               ? 'mx-auto bg-cpsu-green/10 text-cpsu-green hover:bg-cpsu-green hover:text-white' 
               : 'bg-gray-100 text-gray-500 hover:bg-cpsu-gold hover:text-white'
           }`}
         >
           {isCollapsed ? <ChevronRightIcon className="w-5 h-5" /> : <ChevronLeftIcon className="w-5 h-5" />}
+        </button>
+        <button 
+          onClick={() => setIsOpen(false)}
+          className="p-2 -mr-2 text-gray-500 hover:text-red-500 lg:hidden"
+        >
+          <ChevronLeftIcon className="w-6 h-6" />
         </button>
       </div>
 

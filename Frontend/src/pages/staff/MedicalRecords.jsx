@@ -206,7 +206,7 @@ const MedicalRecords = () => {
                     <td className="px-10 py-7 text-right">
                       <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
                          <a 
-                          href={`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/${doc.file_path}`} 
+                          href={doc.file_path?.startsWith('http') ? doc.file_path : `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/${doc.file_path}`} 
                           target="_blank" 
                           rel="noopener noreferrer"
                           className="p-3 bg-white border border-gray-100 text-gray-400 hover:text-cpsu-green hover:shadow-md rounded-xl transition-all"

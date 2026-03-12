@@ -85,6 +85,7 @@ const InternalLayout = ({ children }) => {
 
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
   const refreshUser = () => {
     try {
@@ -117,14 +118,29 @@ const InternalLayout = ({ children }) => {
     <ConsentGate user={user} onConsent={refreshUser}>
       <div className={`min-h-screen flex bg-gray-50 transition-colors duration-500`}>
         <SystemTour role={user.role || 'student'} />
-        <Sidebar role={user.role || 'student'} />
+        
+        {/* Sidebar Overlay for Mobile */}
+        {isSidebarOpen && (
+          <div 
+            className="fixed inset-0 bg-black/50 z-40 lg:hidden backdrop-blur-sm transition-opacity"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
+
+        <Sidebar 
+          role={user.role || 'student'} 
+          isOpen={isSidebarOpen} 
+          setIsOpen={setIsSidebarOpen}
+        />
+
         <div className="flex-1 flex flex-col h-screen overflow-hidden">
           <AlertBanner />
           <InternalHeader 
             onNotificationsClick={() => setIsNotificationsOpen(true)} 
             unreadCount={unreadCount}
+            onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)}
           />
-          <main className="flex-1 overflow-y-auto p-6 bg-gray-50">
+          <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-gray-50">
             {children}
           </main>
         </div>

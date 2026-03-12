@@ -1,9 +1,9 @@
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { LogOut, Bell, Home, BookOpen, FileText, Pill, Activity, MessageSquareIcon } from 'lucide-react';
+import { LogOut, Bell, Home, BookOpen, FileText, Pill, Activity, MessageSquareIcon, Menu } from 'lucide-react';
 import { useLanguage } from '../LanguageContext';
 
-const InternalHeader = ({ onNotificationsClick, unreadCount = 0 }) => {
+const InternalHeader = ({ onNotificationsClick, unreadCount = 0, onMenuClick }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useLanguage();
@@ -28,21 +28,32 @@ const InternalHeader = ({ onNotificationsClick, unreadCount = 0 }) => {
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex items-center justify-between h-20">
           
-          {/* Logo & Branding */}
-          <Link to={role === 'student' ? '/student' : role === 'staff' ? '/staff' : '/admin'} data-tour="branding" className="flex items-center gap-4 group">
-            <div className="relative">
-              <div className="w-12 h-12 bg-white border border-gray-50 rounded-2xl flex items-center justify-center shadow-sm group-hover:scale-105 group-hover:rotate-3 transition-all overflow-hidden p-2">
-                <img src="/cpsu-logo.png" alt="CPSU" className="w-full h-full object-contain" />
+          <div className="flex items-center gap-4">
+            {/* Mobile Menu Toggle */}
+            <button
+              onClick={onMenuClick}
+              className="p-2 -ml-2 text-gray-500 hover:text-cpsu-green hover:bg-cpsu-green/5 rounded-xl lg:hidden transition-all"
+              aria-label="Toggle Menu"
+            >
+              <Menu className="w-6 h-6" />
+            </button>
+
+            {/* Logo & Branding */}
+            <Link to={role === 'student' ? '/student' : role === 'staff' ? '/staff' : '/admin'} data-tour="branding" className="flex items-center gap-4 group">
+              <div className="relative">
+                <div className="w-12 h-12 bg-white border border-gray-50 rounded-2xl flex items-center justify-center shadow-sm group-hover:scale-105 group-hover:rotate-3 transition-all overflow-hidden p-2">
+                  <img src="/cpsu-logo.png" alt="CPSU" className="w-full h-full object-contain" />
+                </div>
+                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-cpsu-gold rounded-full border-2 border-white shadow-sm" />
               </div>
-              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-cpsu-gold rounded-full border-2 border-white shadow-sm" />
-            </div>
-            <div className="hidden sm:block">
-              <p className="text-[10px] font-black text-cpsu-green uppercase tracking-[0.2em] leading-none mb-1">Negros Occidental</p>
-              <p className="text-xl font-black text-gray-900 font-outfit leading-tight tracking-tighter">
-                CPSU <span className="text-cpsu-green">Health</span>
-              </p>
-            </div>
-          </Link>
+              <div className="hidden sm:block">
+                <p className="text-[10px] font-black text-cpsu-green uppercase tracking-[0.2em] leading-none mb-1">Negros Occidental</p>
+                <p className="text-xl font-black text-gray-900 font-outfit leading-tight tracking-tighter">
+                  CPSU <span className="text-cpsu-green">Health</span>
+                </p>
+              </div>
+            </Link>
+          </div>
 
           {/* Right Action Area */}
           <div className="flex items-center gap-4">
