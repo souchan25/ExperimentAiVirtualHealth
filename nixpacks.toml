@@ -1,15 +1,16 @@
 [phases.setup]
 nixPkgs = ["python310"]
+paths = ["/opt/venv/bin"]
 
 [phases.install]
 cmds = [
-    "cd FastAPI",
     "python -m venv /opt/venv",
-    ". /opt/venv/bin/activate && pip install -r requirements.txt"
+    "/opt/venv/bin/pip install -r FastAPI/requirements.txt"
 ]
 
 [phases.build]
 cmds = ["echo 'No build step required'"]
 
 [start]
-cmd = "cd FastAPI && . /opt/venv/bin/activate && uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+cmd = "/opt/venv/bin/uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+
