@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Bot, X, Send, Minimize2, Maximize2 } from 'lucide-react';
+import { Bot, X, Send, Minimize2, Maximize2, MessageSquare } from 'lucide-react';
 import { chatService } from '../api/service';
 
 const FloatingAssistant = ({ role }) => {
@@ -166,14 +166,15 @@ const FloatingAssistant = ({ role }) => {
       {!isOpen && (
         <button
           onClick={toggleOpen}
-          className="group relative bg-gradient-to-tr from-emerald-600 to-teal-500 rounded-full p-4 shadow-[0_8px_30px_rgb(16,185,129,0.3)] hover:shadow-[0_8px_40px_rgb(16,185,129,0.5)] hover:-translate-y-1 transition-all duration-300 ring-4 ring-emerald-50/50 backdrop-blur-sm"
+          className="group relative bg-gradient-to-tr from-emerald-600 to-teal-500 rounded-full p-5 shadow-[0_8px_30px_rgb(16,185,129,0.3)] hover:shadow-[0_8px_40px_rgb(16,185,129,0.5)] hover:-translate-y-1 transition-all duration-300 ring-4 ring-emerald-50/50 backdrop-blur-sm flex items-center justify-center"
         >
-          <img 
-            src="/robot.png" 
-            alt="AI Assistant" 
-            className="w-11 h-11 object-contain drop-shadow-lg relative z-10 group-hover:scale-110 transition-transform duration-300 animate-pulse-slow"
-            hidden={false}
+          <MessageSquare 
+            size={28} 
+            className="text-white drop-shadow-lg relative z-10 group-hover:scale-110 transition-transform duration-300" 
           />
+          {/* Pulsing effect */}
+          <div className="absolute inset-0 rounded-full bg-emerald-400/20 animate-ping -z-10 group-hover:bg-emerald-400/30"></div>
+          
           {/* Tooltip */}
           <div className="absolute right-full mr-5 top-1/2 -translate-y-1/2 px-4 py-2 bg-slate-800/90 backdrop-blur-md text-white text-xs font-semibold rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:translate-x-1 whitespace-nowrap pointer-events-none shadow-xl border border-white/10">
             Need help navigating?
