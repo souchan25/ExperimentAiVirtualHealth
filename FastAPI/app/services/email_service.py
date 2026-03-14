@@ -1,4 +1,5 @@
 import smtplib
+import cloudinary.uploader
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from ..config import settings
@@ -43,8 +44,8 @@ def send_reset_password_email(to_email: str, token: str):
     """
     Sends a password reset email.
     """
-    # Assuming frontend URL is at localhost:3000 for now
-    reset_link = f"http://localhost:3000/reset-password?token={token}"
+    # Use configured frontend URL
+    reset_link = f"{settings.FRONTEND_URL}/reset-password?token={token}"
     subject = "Reset Your Password - CPSU Health Assistant"
     body = f"""
     <html>

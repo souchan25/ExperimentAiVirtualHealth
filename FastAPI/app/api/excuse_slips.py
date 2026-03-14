@@ -119,6 +119,7 @@ async def create_excuse_slip(
     # Generate the PDF into a buffer
     buffer = io.BytesIO()
     generate_medical_slip(buffer, student, current_user, slip_in)
+    buffer.name = "excuse_slip.pdf"
     buffer.seek(0)
     
     # Upload to Cloudinary

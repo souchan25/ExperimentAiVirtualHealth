@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     # Core
     DEBUG: bool = False
     SECRET_KEY: str = "your-super-secret-key-here-change-this-in-production"
+    FRONTEND_URL: str = "http://localhost:5173"
     
     # Database
     USE_SQLITE: bool = True  # Default to SQLite for development
