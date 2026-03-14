@@ -344,6 +344,7 @@ class HealthProfileBase(BaseModel):
     pre_existing_conditions: Optional[str] = ""
     emergency_contact_name: Optional[str] = ""
     emergency_contact_phone: Optional[str] = ""
+    cpsu_address: Optional[str] = ""
 
 class HealthProfileCreate(HealthProfileBase):
     pass

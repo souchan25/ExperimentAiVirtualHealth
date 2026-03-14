@@ -22,8 +22,20 @@ async def get_profile(
         db.add(profile)
         await db.commit()
         await db.refresh(profile)
-        
-    return profile
+
+    # Manually construct response so we can include cpsu_address from the User model
+    return {
+        "user_id": current_user.id,
+        "age": profile.age,
+        "sex": profile.sex,
+        "blood_type": profile.blood_type,
+        "allergies": profile.allergies,
+        "pre_existing_conditions": profile.pre_existing_conditions,
+        "emergency_contact_name": profile.emergency_contact_name,
+        "emergency_contact_phone": profile.emergency_contact_phone,
+        "cpsu_address": current_user.cpsu_address or "",
+        "updated_at": profile.updated_at,
+    }
 
 @router.put("/", response_model=HealthProfileResponse)
 async def update_profile(
@@ -37,10 +49,29 @@ async def update_profile(
     if not profile:
         profile = HealthProfile(user_id=current_user.id)
         db.add(profile)
-    
-    for field, value in profile_in.model_dump(exclude_unset=True).items():
+
+    data = profile_in.model_dump(exclude_unset=True)
+    cpsu_address = data.pop("cpsu_address", None)
+
+    # Update health profile fields
+    for field, value in data.items():
         setattr(profile, field, value)
-        
+
+    # Store address on the main User record
+    if cpsu_address is not None:
+        current_user.cpsu_address = cpsu_address
+
     await db.commit()
     await db.refresh(profile)
-    return profile
+    return {
+        "user_id": current_user.id,
+        "age": profile.age,
+        "sex": profile.sex,
+        "blood_type": profile.blood_type,
+        "allergies": profile.allergies,
+        "pre_existing_conditions": profile.pre_existing_conditions,
+        "emergency_contact_name": profile.emergency_contact_name,
+        "emergency_contact_phone": profile.emergency_contact_phone,
+        "cpsu_address": current_user.cpsu_address or "",
+        "updated_at": profile.updated_at,
+    }
