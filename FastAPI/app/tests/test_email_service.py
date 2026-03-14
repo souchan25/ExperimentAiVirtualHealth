@@ -18,7 +18,7 @@ def test_send_email_success_plain_text(mock_smtp):
 
     # Assert
     assert result is True
-    mock_smtp.assert_called_once_with(settings.SMTP_SERVER, settings.PORT)
+    mock_smtp.assert_called_once_with(settings.SMTP_SERVER, settings.SMTP_PORT)
     mock_server.starttls.assert_called_once()
     mock_server.login.assert_called_once_with(settings.LOGIN, settings.SMTP_KEY)
     mock_server.send_message.assert_called_once()

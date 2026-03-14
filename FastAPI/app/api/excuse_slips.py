@@ -124,7 +124,7 @@ async def create_excuse_slip(
     
     # Upload to Cloudinary
     try:
-        cloudinary_url = cloudinary_upload(buffer, folder="excuse_slips", resource_type="raw")
+        cloudinary_url = cloudinary_upload(buffer, folder="excuse_slips", resource_type="image")
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
