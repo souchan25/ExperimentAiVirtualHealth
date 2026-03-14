@@ -1,7 +1,10 @@
 import os
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import List
+from typing import Any
 from urllib.parse import quote_plus
+import json
+from pydantic import field_validator
 
 class Settings(BaseSettings):
     # Core
@@ -38,6 +41,32 @@ class Settings(BaseSettings):
         "https://aivirtualhealthassistant.firebaseapp.com",
         "https://experimentaivirtualhealth-production.up.railway.app",
     ]
+
+    @field_validator("CORS_ALLOWED_ORIGINS", mode="before")
+    @classmethod
+    def _parse_cors_allowed_origins(cls, value: Any) -> Any:
+        """Accept JSON arrays or comma-separated origins from env vars."""
+        if isinstance(value, list):
+            return value
+
+        if isinstance(value, str):
+            raw = value.strip()
+            if not raw:
+                return []
+
+            # Preferred cloud format: JSON array string.
+            if raw.startswith("["):
+                try:
+                    parsed = json.loads(raw)
+                    if isinstance(parsed, list):
+                        return [str(item).strip() for item in parsed if str(item).strip()]
+                except Exception:
+                    pass
+
+            # Fallback format: comma-separated origins.
+            return [item.strip() for item in raw.split(",") if item.strip()]
+
+        return value
     
     # ML
     ML_MODEL_PATH: str = "ML/models/disease_predictor_v2.pkl"
@@ -66,6 +95,7 @@ class Settings(BaseSettings):
     SMTP_KEY: str = ""
     EMAILS_FROM_EMAIL: str = "healthassistant778@gmail.com"
     EMAILS_FROM_NAME: str = "CPSU Health Assistant"
+    BREVO_API_KEY: str = ""
     
     @property
     def DATABASE_URL(self) -> str:

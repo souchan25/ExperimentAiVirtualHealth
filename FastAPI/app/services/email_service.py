@@ -1,19 +1,25 @@
 import smtplib
+import json
+import urllib.request
+import urllib.error
 import cloudinary.uploader
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from ..config import settings
 
-def send_email(to_email: str, subject: str, body: str, is_html: bool = False):
+BREVO_API_URL = "https://api.brevo.com/v3/smtp/email"
+
+
+def send_email_smtp(to_email: str, subject: str, body: str, is_html: bool = False):
     """
     Sends an email using Brevo SMTP.
     """
     msg = MIMEMultipart()
-    msg['From'] = f"{settings.EMAILS_FROM_NAME} <{settings.EMAILS_FROM_EMAIL}>"
-    msg['To'] = to_email
-    msg['Subject'] = subject
+    msg["From"] = f"{settings.EMAILS_FROM_NAME} <{settings.EMAILS_FROM_EMAIL}>"
+    msg["To"] = to_email
+    msg["Subject"] = subject
 
-    msg.attach(MIMEText(body, 'html' if is_html else 'plain'))
+    msg.attach(MIMEText(body, "html" if is_html else "plain"))
 
     try:
         with smtplib.SMTP(settings.SMTP_SERVER, settings.SMTP_PORT, timeout=10) as server:
@@ -25,7 +31,53 @@ def send_email(to_email: str, subject: str, body: str, is_html: bool = False):
         print(f"SMTP error occurred: {e}")
         return False
     except Exception as e:
-        print(f"Error sending email: {e}")
+        print(f"Error sending email via SMTP: {e}")
+        return False
+
+
+def send_email_via_brevo_api(
+    to_email: str, subject: str, body: str, is_html: bool = False
+):
+    """
+    Sends an email using Brevo HTTP API (recommended for Railway).
+    """
+    if not settings.BREVO_API_KEY:
+        print("BREVO_API_KEY is not configured; skipping Brevo API send.")
+        return False
+
+    payload = {
+        "sender": {
+            "name": settings.EMAILS_FROM_NAME,
+            "email": settings.EMAILS_FROM_EMAIL,
+        },
+        "to": [{"email": to_email}],
+        "subject": subject,
+        "htmlContent" if is_html else "textContent": body,
+    }
+
+    headers = {
+        "accept": "application/json",
+        "api-key": settings.BREVO_API_KEY,
+        "content-type": "application/json",
+    }
+
+    data = json.dumps(payload).encode("utf-8")
+    req = urllib.request.Request(
+        BREVO_API_URL, data=data, headers=headers, method="POST"
+    )
+
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            status = resp.getcode()
+            if status in (200, 201, 202):
+                return True
+            print(f"Brevo API returned unexpected status: {status}")
+            return False
+    except urllib.error.HTTPError as e:
+        print(f"Brevo API HTTP error: {e.code} {e.reason}")
+        return False
+    except Exception as e:
+        print(f"Error sending email via Brevo API: {e}")
         return False
 
 def upload_file(file, folder="documents", resource_type="auto"):
@@ -59,4 +111,9 @@ def send_reset_password_email(to_email: str, token: str):
         </body>
     </html>
     """
-    return send_email(to_email, subject, body, is_html=True)
+    # Prefer Brevo HTTP API (works on platforms that block SMTP).
+    sent = send_email_via_brevo_api(to_email, subject, body, is_html=True)
+    if not sent:
+        # Fallback to SMTP if API fails or is not configured.
+        return send_email_smtp(to_email, subject, body, is_html=True)
+    return True
