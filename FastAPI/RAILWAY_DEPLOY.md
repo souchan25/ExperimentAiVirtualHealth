@@ -24,7 +24,8 @@ git push origin main
 2. Click "New Project"
 3. Select "Deploy from GitHub repo"
 4. Choose your repository
-5. Select the `FastAPI` directory as root
+5. Deploy from the repository root (`D:/Expiremental`), not the `FastAPI` subdirectory
+6. Keep the root `Dockerfile` so Railway includes both `FastAPI/` and `ML/`
 
 ### 3. Configure Environment Variables
 
@@ -72,7 +73,7 @@ COHERE_API_KEY=...
 #### Email Service (Brevo/SMTP)
 ```
 SMTP_SERVER=smtp-relay.brevo.com
-PORT=587
+SMTP_PORT=587
 LOGIN=your-brevo-email
 SMTP_KEY=your-brevo-key
 EMAILS_FROM_EMAIL=your-email@example.com
@@ -87,13 +88,15 @@ ML_DATASETS_PATH=ML/Datasets/active
 
 ### 4. Initialize Database
 
-After first deployment, run this command in Railway's terminal to create tables:
+Fastest option for a same-day launch: set `AUTO_CREATE_TABLES=true` for the first deploy so the schema is created automatically, then change it back to `false` after the app is up.
+
+If you prefer manual initialization, run this command in Railway's terminal after the first deploy:
 
 ```bash
 python create_tables.py
 ```
 
-Or set `AUTO_CREATE_TABLES=true` for automatic table creation (less safe for production).
+If you deploy from the repo root via Docker, the working directory is already `FastAPI`, so `python create_tables.py` is the correct command.
 
 ### 5. Verify Deployment
 
@@ -107,16 +110,16 @@ Or set `AUTO_CREATE_TABLES=true` for automatic table creation (less safe for pro
 ### File Storage
 - ✅ All file uploads use **Cloudinary** (persistent)
 - ✅ No local filesystem dependencies
-- ✅ Logo serves from `/assets/cpsu-logo.png`
+- ✅ Logo loads from the bundled `FastAPI/assets/` directory
 
 ### Database
 - ✅ Uses **PostgreSQL** via Supabase (persistent)
 - ✅ No SQLite (ephemeral on Railway)
 
 ### ML Models
-- ✅ ML models (2.3MB) should be committed to repo
+- ✅ ML models should be committed to repo
 - ✅ If missing, ML service gracefully falls back
-- ✅ Paths resolve automatically across deployment environments
+- ✅ Deploying from repo root keeps both `FastAPI/` and `ML/` available in the container
 
 ### Scaling
 - Railway auto-scales based on traffic

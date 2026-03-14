@@ -5,9 +5,11 @@ from sqlalchemy.future import select
 from sqlalchemy import func, extract
 from typing import List, Dict, Any
 from uuid import UUID
+from pathlib import Path
 import pandas as pd
 import io
 import os
+import tempfile
 from datetime import datetime
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
@@ -24,6 +26,7 @@ from openpyxl.styles import Font, Fill, PatternFill, Alignment, Border, Side
 from openpyxl.chart import PieChart, BarChart, LineChart, Reference
 from openpyxl.utils import get_column_letter
 import logging
+from starlette.background import BackgroundTask
 
 # CPSU Brand Colors
 CPSU_GREEN = HexColor("#2E7D32")
@@ -32,6 +35,21 @@ CPSU_GOLD = HexColor("#FFB300")
 CPSU_TEXT = HexColor("#1A1A1A")
 
 logger = logging.getLogger(__name__)
+
+LOGO_PATH = Path(__file__).resolve().parents[2] / "assets" / "cpsu-logo.png"
+
+
+def _remove_file(path: str) -> None:
+    try:
+        os.remove(path)
+    except FileNotFoundError:
+        pass
+
+
+def _create_temp_pdf(prefix: str) -> str:
+    tmp = tempfile.NamedTemporaryFile(prefix=prefix, suffix=".pdf", delete=False)
+    tmp.close()
+    return tmp.name
 
 from ..database import get_db
 from ..models import User, SymptomRecord, DepartmentStats, AuditLog, WellnessCheckin
@@ -285,8 +303,7 @@ async def export_pdf_report(
         
     data = await get_aggregated_report_data(db)
     
-    os.makedirs("temp_reports", exist_ok=True)
-    pdf_path = "temp_reports/health_audit_report.pdf"
+    pdf_path = _create_temp_pdf("health_audit_")
     
     # Custom Page Template with Header/Footer
     class CPSUReportTemplate(SimpleDocTemplate):
@@ -306,9 +323,8 @@ async def export_pdf_report(
         header_y = PageHeight - 0.4*inch
         
         # Logo
-        logo_path = "d:/Expiremental/Assets/cpsu-logo.png"
-        if os.path.exists(logo_path):
-            canvas.drawImage(logo_path, doc.leftMargin, header_y - 0.2*inch, width=0.4*inch, height=0.4*inch, mask='auto')
+        if LOGO_PATH.exists():
+            canvas.drawImage(str(LOGO_PATH), doc.leftMargin, header_y - 0.2*inch, width=0.4*inch, height=0.4*inch, mask='auto')
         
         canvas.setFont('Helvetica-Bold', 10)
         canvas.setFillColor(CPSU_GREEN)
@@ -390,9 +406,8 @@ async def export_pdf_report(
     
     # --- Title Page (Premium Design) ---
     elements.append(Spacer(1, 1.5*inch))
-    logo_path = "d:/Expiremental/Assets/cpsu-logo.png"
-    if os.path.exists(logo_path):
-        img = Image(logo_path, 2*inch, 2*inch)
+    if LOGO_PATH.exists():
+        img = Image(str(LOGO_PATH), 2*inch, 2*inch)
         img.hAlign = 'CENTER'
         elements.append(img)
     
@@ -644,7 +659,11 @@ async def export_pdf_report(
     
     doc.build(elements, onFirstPage=add_header_footer, onLaterPages=add_header_footer)
     
-    return FileResponse(pdf_path, filename="health_audit_report.pdf")
+    return FileResponse(
+        pdf_path,
+        filename="health_audit_report.pdf",
+        background=BackgroundTask(_remove_file, pdf_path),
+    )
 
 @router.get("/export/xlsx")
 async def export_excel_report(
@@ -835,16 +854,14 @@ async def export_referral_pdf(
         
     record, student_name, student_dept, student_sid = row
     
-    os.makedirs("temp_reports", exist_ok=True)
-    pdf_path = f"temp_reports/referral_{record_id}.pdf"
+    pdf_path = _create_temp_pdf(f"referral_{record_id}_")
     
     c = canvas.Canvas(pdf_path, pagesize=letter)
     width, height = letter
     
     # --- Letterhead ---
-    logo_path = "d:/Expiremental/Assets/cpsu-logo.png"
-    if os.path.exists(logo_path):
-        c.drawImage(logo_path, 1*inch, height - 1.2*inch, width=0.8*inch, height=0.8*inch, mask='auto')
+    if LOGO_PATH.exists():
+        c.drawImage(str(LOGO_PATH), 1*inch, height - 1.2*inch, width=0.8*inch, height=0.8*inch, mask='auto')
     
     c.setFillColor(CPSU_GREEN)
     c.setFont("Helvetica-Bold", 16)
@@ -948,7 +965,11 @@ async def export_referral_pdf(
     c.drawCentredString(width/2, 0.35*inch, "Verification of this referral can be requested at the University Health Services Office.")
     
     c.save()
-    return FileResponse(pdf_path, filename=f"referral_{record_id}.pdf")
+    return FileResponse(
+        pdf_path,
+        filename=f"referral_{record_id}.pdf",
+        background=BackgroundTask(_remove_file, pdf_path),
+    )
 
 @router.get("/referral/{record_id}/xlsx")
 async def export_referral_xlsx(
