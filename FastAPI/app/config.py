@@ -61,7 +61,7 @@ class Settings(BaseSettings):
     
     # SMTP / Brevo
     SMTP_SERVER: str = "smtp-relay.brevo.com"
-    PORT: int = 587
+    SMTP_PORT: int = 587
     LOGIN: str = ""
     SMTP_KEY: str = ""
     EMAILS_FROM_EMAIL: str = "healthassistant778@gmail.com"
