@@ -417,6 +417,7 @@ class WellnessCheckin(Base):
     mood = Column(String(50)) # 'Happy', 'Stressed', 'Sad', 'Anxious', 'Neutral'
     stress_level = Column(Integer) # 1-10
     sleep_hours = Column(Float)
+    sleep_quality = Column(String(50), nullable=True) # 'Good', 'Fair', 'Poor'
     physical_activity = Column(String(100))
     notes = Column(Text, default="")
     

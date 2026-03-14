@@ -35,6 +35,7 @@ class Settings(BaseSettings):
         "http://10.0.11.154:8082",
         "https://aivirtualhealthassistant.web.app",
         "https://aivirtualhealthassistant.firebaseapp.com",
+        "*", # Allow all for development flexibility
     ]
     
     # ML

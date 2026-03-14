@@ -15,14 +15,29 @@ def send_email(to_email: str, subject: str, body: str, is_html: bool = False):
     msg.attach(MIMEText(body, 'html' if is_html else 'plain'))
 
     try:
-        with smtplib.SMTP(settings.SMTP_SERVER, settings.PORT) as server:
+        with smtplib.SMTP(settings.SMTP_SERVER, settings.PORT, timeout=10) as server:
             server.starttls()
             server.login(settings.LOGIN, settings.SMTP_KEY)
             server.send_message(msg)
         return True
+    except smtplib.SMTPException as e:
+        print(f"SMTP error occurred: {e}")
+        return False
     except Exception as e:
         print(f"Error sending email: {e}")
         return False
+
+def upload_file(file, folder="documents", resource_type="auto"):
+    """
+    Uploads a file to Cloudinary.
+    'file' can be a path, a file-like object, or a URL.
+    """
+    response = cloudinary.uploader.upload(
+        file,
+        folder=f"health_assistant/{folder}",
+        resource_type=resource_type
+    )
+    return response.get("secure_url")
 
 def send_reset_password_email(to_email: str, token: str):
     """

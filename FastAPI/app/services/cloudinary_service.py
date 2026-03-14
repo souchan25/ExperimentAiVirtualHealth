@@ -9,12 +9,16 @@ cloudinary.config(
     secure=True
 )
 
-def upload_file(file, folder="documents"):
+def upload_file(file, folder="documents", resource_type="auto"):
     """
     Uploads a file to Cloudinary.
     'file' can be a path, a file-like object, or a URL.
     """
-    response = cloudinary.uploader.upload(file, folder=f"health_assistant/{folder}", resource_type="auto")
+    response = cloudinary.uploader.upload(
+        file, 
+        folder=f"health_assistant/{folder}", 
+        resource_type=resource_type
+    )
     return response.get("secure_url")
 
 def delete_file(public_id, resource_type="image"):

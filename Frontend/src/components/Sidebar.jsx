@@ -97,13 +97,16 @@ const Sidebar = ({ role, isOpen, setIsOpen }) => {
       <nav className="flex-1 overflow-y-auto p-4 space-y-2">
         {links.map((link) => {
           const isActive = location.pathname === link.path;
+          // On mobile (lg:hidden), we don't want the collapsed styles
+          const effectiveCollapsed = isCollapsed;
+          
           return (
             <Link
               key={link.path}
               to={link.path}
-              title={isCollapsed ? link.name : ''}
+              title={effectiveCollapsed ? link.name : ''}
               className={`flex items-center rounded-xl transition-all duration-300 group ${
-                isCollapsed ? 'justify-center p-3' : 'p-3 px-4'
+                effectiveCollapsed ? 'lg:justify-center p-3 lg:px-3 px-4' : 'p-3 px-4'
               } ${
                 isActive 
                   ? 'bg-cpsu-green text-white shadow-md shadow-cpsu-green/20 scale-[1.02]' 
@@ -113,37 +116,35 @@ const Sidebar = ({ role, isOpen, setIsOpen }) => {
               <link.icon className={`w-6 h-6 flex-shrink-0 transition-transform duration-300 group-hover:scale-110 ${
                 isActive ? 'text-cpsu-gold' : 'text-gray-400 group-hover:text-cpsu-green'
               }`} />
-              {!isCollapsed && (
-                <span className={`ml-3 font-bold text-sm tracking-wide ${isActive ? 'text-white' : ''}`}>
-                  {link.name}
-                </span>
-              )}
-              {isActive && !isCollapsed && (
-                <div className="ml-auto w-1.5 h-1.5 rounded-full bg-cpsu-gold shadow-sm shadow-cpsu-gold/50" />
+              <span className={`ml-3 font-bold text-sm tracking-wide transition-all duration-300 ${
+                isActive ? 'text-white' : ''
+              } ${effectiveCollapsed ? 'lg:hidden opacity-100' : 'opacity-100'}`}>
+                {link.name}
+              </span>
+              {isActive && (
+                <div className={`ml-auto w-1.5 h-1.5 rounded-full bg-cpsu-gold shadow-sm shadow-cpsu-gold/50 ${effectiveCollapsed ? 'lg:hidden' : ''}`} />
               )}
             </Link>
           );
         })}
       </nav>
 
-      <div className={`p-4 border-t border-gray-50 bg-gray-50/30 ${isCollapsed ? 'flex justify-center' : ''}`}>
-        <div className={`flex items-center transition-all duration-500 ${isCollapsed ? 'flex-col' : 'px-2'}`}>
-          <div className={`relative group`}>
+      <div className={`p-4 border-t border-gray-50 bg-gray-50/30 ${isCollapsed ? 'lg:flex lg:justify-center' : ''}`}>
+        <div className={`flex items-center transition-all duration-500 ${isCollapsed ? 'lg:flex-col lg:items-center' : 'px-2'}`}>
+          <div className={`relative group flex-shrink-0`}>
             <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white font-black shadow-md transition-transform group-hover:rotate-6 ${
               role === 'student' ? 'bg-cpsu-green shadow-cpsu-green/30' : 'bg-cpsu-gold shadow-cpsu-gold/30'
             }`}>
-              {role[0].toUpperCase()}
+              {role && role.length > 0 ? role[0].toUpperCase() : 'U'}
             </div>
             <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-white rounded-full flex items-center justify-center border-2 border-gray-50 shadow-sm">
               <div className="w-2 h-2 bg-green-500 rounded-full" />
             </div>
           </div>
-          {!isCollapsed && (
-            <div className="ml-3 overflow-hidden">
-              <p className="text-sm font-black text-gray-900 truncate uppercase tracking-tight">{role}</p>
-              <p className="text-[10px] font-bold text-cpsu-green uppercase tracking-widest opacity-70">CPSU PATIENT</p>
-            </div>
-          )}
+          <div className={`ml-3 overflow-hidden transition-all duration-300 ${isCollapsed ? 'lg:hidden' : 'opacity-100'}`}>
+            <p className="text-sm font-black text-gray-900 truncate uppercase tracking-tight">{role}</p>
+            <p className="text-[10px] font-bold text-cpsu-green uppercase tracking-widest opacity-70">CPSU PATIENT</p>
+          </div>
         </div>
       </div>
     </div>

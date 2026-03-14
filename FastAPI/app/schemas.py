@@ -262,6 +262,7 @@ class WellnessCheckinBase(BaseModel):
     mood: str
     stress_level: int
     sleep_hours: float
+    sleep_quality: Optional[str] = None
     physical_activity: str
     notes: Optional[str] = ""
 

@@ -5,10 +5,12 @@ import { knowledgeService } from '../../api/service';
 
 const KnowledgeBase = () => {
   const [articles, setArticles] = useState([]);
+  const [clinicalResults, setClinicalResults] = useState([]);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('');
   const [selectedArticle, setSelectedArticle] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [clinicalLoading, setClinicalLoading] = useState(false);
 
   const categories = ['All', 'Emergency', 'Injury', 'Illness', 'General'];
 
@@ -28,9 +30,40 @@ const KnowledgeBase = () => {
     }
   };
 
+  const fetchClinicalData = async (query) => {
+    if (!query || query.length < 2) {
+      setClinicalResults([]);
+      return;
+    }
+    
+    try {
+      setClinicalLoading(true);
+      // NLM Clinical Tables API endpoint
+      const response = await fetch(`https://clinicaltables.nlm.nih.gov/api/conditions/v3/search?terms=${encodeURIComponent(query)}&maxList=6`);
+      const data = await response.json();
+      
+      // format: [total_count, ids, null, names_array]
+      if (data && data[3]) {
+        const formatted = data[3].map((item, index) => ({
+          id: data[1][index],
+          title: item[0],
+          isClinical: true,
+          category: 'Clinical Info',
+          content: `Official clinical information for ${item[0]}. Click to learn more from authoritative sources.`
+        }));
+        setClinicalResults(formatted);
+      }
+    } catch (err) {
+      console.error("Failed to fetch clinical data", err);
+    } finally {
+      setClinicalLoading(false);
+    }
+  };
+
   const handleSearch = (e) => {
     e.preventDefault();
     fetchArticles();
+    if (search) fetchClinicalData(search);
   };
 
   return (
@@ -75,48 +108,105 @@ const KnowledgeBase = () => {
         </div>
 
         {/* Articles Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {loading ? (
-             Array(6).fill(0).map((_, i) => (
-              <div key={i} className="h-64 bg-white rounded-3xl border border-gray-100 animate-pulse" />
-            ))
-          ) : articles.length === 0 ? (
-            <div className="col-span-full py-20 text-center space-y-4">
-               <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <BookOpen className="w-10 h-10 text-gray-300" />
-              </div>
-              <h2 className="text-xl font-bold text-gray-900">No guides found</h2>
-              <p className="text-gray-500">Try adjusting your search or category filters.</p>
+        <div className="space-y-12">
+          {/* Local First Aid Section */}
+          <div className="space-y-6">
+            <div className="flex items-center gap-3">
+              <div className="w-1.5 h-6 bg-cpsu-green rounded-full" />
+              <h2 className="text-2xl font-black text-gray-900 font-outfit">First-Aid Guides</h2>
             </div>
-          ) : (
-            articles.map(article => (
-              <motion.div
-                key={article.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="group bg-white rounded-3xl border border-gray-100 p-6 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer"
-                onClick={() => setSelectedArticle(article)}
-              >
-                <div className="flex justify-between items-start mb-4">
-                  <div className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider ${
-                    article.category === 'Emergency' ? 'bg-red-50 text-red-600' : 'bg-cpsu-green/10 text-cpsu-green'
-                  }`}>
-                    {article.category}
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {loading ? (
+                 Array(3).fill(0).map((_, i) => (
+                  <div key={i} className="h-64 bg-white rounded-3xl border border-gray-100 animate-pulse" />
+                ))
+                ) : articles.length === 0 ? (
+                <div className="col-span-full py-10 text-center space-y-4 bg-white rounded-3xl border border-dashed border-gray-100">
+                  <BookOpen className="w-10 h-10 text-gray-200 mx-auto" />
+                  <p className="text-gray-400 font-medium text-sm">No local first-aid guides found. Check clinical knowledge below.</p>
+                </div>
+              ) : (
+                articles.map(article => (
+                  <motion.div
+                    key={article.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="group bg-white rounded-3xl border border-gray-100 p-6 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer"
+                    onClick={() => setSelectedArticle(article)}
+                  >
+                    <div className="flex justify-between items-start mb-4">
+                      <div className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider ${
+                        article.category === 'Emergency' ? 'bg-red-50 text-red-600' : 'bg-cpsu-green/10 text-cpsu-green'
+                      }`}>
+                        {article.category}
+                      </div>
+                      <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-cpsu-green transition-colors" />
+                    </div>
+                    <h3 className="text-xl font-black text-gray-900 font-outfit mb-3 group-hover:text-cpsu-green transition-colors line-clamp-2">
+                      {article.title}
+                    </h3>
+                    <p className="text-gray-500 text-sm leading-relaxed line-clamp-3 mb-6">
+                      {article.content}
+                    </p>
+                    <div className="flex items-center gap-2 pt-4 border-t border-gray-50">
+                      <HeartPulse className="w-4 h-4 text-gray-300" />
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Local Medical Guide</span>
+                    </div>
+                  </motion.div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Clinical Results Section (Only shown on search) */}
+          {search && (
+            <div className="space-y-6 pt-6 border-t border-gray-100">
+              <div className="flex items-center gap-3">
+                <div className="w-1.5 h-6 bg-blue-500 rounded-full" />
+                <h2 className="text-2xl font-black text-gray-900 font-outfit">Clinical Knowledge (NIH Library)</h2>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {clinicalLoading ? (
+                   Array(3).fill(0).map((_, i) => (
+                    <div key={i} className="h-48 bg-white rounded-3xl border border-gray-100 animate-pulse" />
+                  ))
+                ) : clinicalResults.length === 0 ? (
+                  <div className="col-span-full py-10 text-center space-y-4 bg-gray-50 rounded-3xl border border-dashed border-gray-200">
+                    <Info className="w-10 h-10 text-gray-300 mx-auto" />
+                    <p className="text-gray-400 font-medium text-sm">No clinical listings found for "{search}"</p>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-cpsu-green transition-colors" />
-                </div>
-                <h3 className="text-xl font-black text-gray-900 font-outfit mb-3 group-hover:text-cpsu-green transition-colors line-clamp-2">
-                  {article.title}
-                </h3>
-                <p className="text-gray-500 text-sm leading-relaxed line-clamp-3 mb-6">
-                  {article.content}
-                </p>
-                <div className="flex items-center gap-2 pt-4 border-t border-gray-50">
-                  <HeartPulse className="w-4 h-4 text-gray-300" />
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Medical Guide</span>
-                </div>
-              </motion.div>
-            ))
+                ) : (
+                  clinicalResults.map(result => (
+                    <motion.div
+                      key={result.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="group bg-gradient-to-br from-white to-blue-50/30 rounded-3xl border border-blue-100 p-6 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer"
+                      onClick={() => window.open(`https://vsearch.nlm.nih.gov/vivisimo/cgi-bin/query-meta?v:project=medlineplus&v:sources=medlineplus-bundle&query=${encodeURIComponent(result.title)}`, '_blank')}
+                    >
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-blue-100 text-blue-600">
+                          Clinical Info
+                        </div>
+                        <ExternalLink className="w-5 h-5 text-blue-300 group-hover:text-blue-500 transition-colors" />
+                      </div>
+                      <h3 className="text-xl font-black text-gray-900 font-outfit mb-3 group-hover:text-blue-600 transition-colors line-clamp-2">
+                        {result.title}
+                      </h3>
+                      <p className="text-gray-500 text-sm leading-relaxed mb-6">
+                        Find detailed medical clinical information and patient education about {result.title} from MedlinePlus.
+                      </p>
+                      <div className="flex items-center gap-2 pt-4 border-t border-blue-50">
+                        <Info className="w-4 h-4 text-blue-300" />
+                        <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Official NIH Data</span>
+                      </div>
+                    </motion.div>
+                  ))
+                )}
+              </div>
+            </div>
           )}
         </div>
       </div>
