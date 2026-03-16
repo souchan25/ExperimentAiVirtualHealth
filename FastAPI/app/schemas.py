@@ -408,7 +408,7 @@ class MessageResponse(BaseModel):
 # Audit Log Schemas
 class AuditLogResponse(BaseModel):
     id: UUID
-    user_id: Optional[UUID] = None
+    user_id: Optional[int] = None
     action: str
     model_name: str
     object_id: str
