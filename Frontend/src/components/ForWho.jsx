@@ -32,7 +32,6 @@ const roles = {
     features: [
       { icon: ClipboardList, title: 'Patient Queue & Triage', desc: 'See all incoming cases prioritized by severity. AI flags urgent cases before they reach the desk.' },
       { icon: BarChart2, title: 'Health Analytics Dashboard', desc: 'Real-time charts of campus health trends, disease prevalence, and department-level reports.' },
-      { icon: ShieldAlert, title: 'Emergency Hotspot Map', desc: 'Visualize where health incidents are clustering on campus and coordinate rapid responses.' },
       { icon: Package, title: 'Clinic Inventory IQ', desc: 'Track medicine and supply stock levels with automated low-stock alerts and restock logs.' },
       { icon: Users, title: 'Student Record Access', desc: 'Access full patient histories, uploaded documents, and AI-extracted clinical summaries instantly.' },
       { icon: FileText, title: 'Prescription & Excuse Slips', desc: 'Issue and digitally sign prescriptions and excuse slips that instantly appear on the student portal.' },

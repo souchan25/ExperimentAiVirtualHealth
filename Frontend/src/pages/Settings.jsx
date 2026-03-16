@@ -11,6 +11,7 @@ import {
   CheckCircleIcon,
   ExclamationCircleIcon
 } from '@heroicons/react/24/outline';
+import { Loader2 } from 'lucide-react';
 import { settingsService, profileService } from '../api/service';
 import { useLanguage } from '../LanguageContext';
 
@@ -311,8 +312,9 @@ const Settings = () => {
                 <button 
                   type="submit"
                   disabled={saving}
-                  className="w-full md:w-auto px-10 py-4 bg-cpsu-green text-white font-black rounded-2xl shadow-xl shadow-cpsu-green/30 hover:bg-green-700 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
+                  className="w-full md:w-auto px-10 py-4 bg-cpsu-green text-white font-black rounded-2xl shadow-xl shadow-cpsu-green/30 hover:bg-green-700 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                 >
+                  {saving && <Loader2 className="w-5 h-5 animate-spin" />}
                   {saving ? 'CHANGING...' : t('change_password') || 'CHANGE PASSWORD'}
                 </button>
               </div>

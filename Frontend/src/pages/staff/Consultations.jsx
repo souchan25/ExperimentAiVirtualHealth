@@ -13,6 +13,7 @@ import {
   ChevronRightIcon,
   FunnelIcon
 } from '@heroicons/react/24/outline';
+import { Loader2, CheckCircle } from 'lucide-react';
 
 const StaffConsultations = () => {
   const [consultations, setConsultations] = useState([]);
@@ -26,6 +27,12 @@ const StaffConsultations = () => {
   const [messageBody, setMessageBody] = useState('');
   const [sendingMessage, setSendingMessage] = useState(false);
   const [activeTab, setActiveTab] = useState('review'); // 'review', 'prescription', 'excuse_slip'
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
+  const [isExportingExcel, setIsExportingExcel] = useState(false);
+  const [isIssuingPrescription, setIsIssuingPrescription] = useState(false);
+  const [isIssuingSlip, setIsIssuingSlip] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   // Prescription Form State
   const [prescData, setPrescData] = useState({
@@ -77,6 +84,7 @@ const StaffConsultations = () => {
 
   const handleUpdate = async () => {
     try {
+      setIsUpdating(true);
       await api.patch(`/staff/symptom-records/${selectedConsultation.id}`, {
         status: status,
         staff_notes: notes,
@@ -84,8 +92,12 @@ const StaffConsultations = () => {
       });
       fetchConsultations();
       setSelectedConsultation(null);
+      setSuccessMessage('Review committed successfully.');
+      setTimeout(() => setSuccessMessage(''), 3000);
     } catch (err) {
       console.error(err);
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -98,7 +110,8 @@ const StaffConsultations = () => {
         content: messageBody.trim(),
       });
       setMessageBody('');
-      alert('Message sent to student.');
+      setSuccessMessage('Message sent to student.');
+      setTimeout(() => setSuccessMessage(''), 3000);
     } catch (err) {
       console.error(err);
       alert('Failed to send message.');
@@ -107,12 +120,22 @@ const StaffConsultations = () => {
     }
   };
 
-  const exportReferralPdf = (id) => {
-    reportService.exportReferralPdf(id);
+  const exportReferralPdf = async (id) => {
+    try {
+      setIsExportingPdf(true);
+      await reportService.exportReferralPdf(id);
+    } finally {
+      setIsExportingPdf(false);
+    }
   };
 
-  const exportReferralExcel = (id) => {
-    reportService.exportReferralXlsx(id);
+  const exportReferralExcel = async (id) => {
+    try {
+      setIsExportingExcel(true);
+      await reportService.exportReferralXlsx(id);
+    } finally {
+      setIsExportingExcel(false);
+    }
   };
 
   const handleQuickMessage = async (consultation) => {
@@ -123,7 +146,8 @@ const StaffConsultations = () => {
         recipient_id: consultation.student_id,
         content: content.trim(),
       });
-      alert('Message sent to student.');
+      setSuccessMessage('Message sent to student.');
+      setTimeout(() => setSuccessMessage(''), 3000);
     } catch (err) {
       console.error(err);
       alert('Failed to send message.');
@@ -133,31 +157,39 @@ const StaffConsultations = () => {
   const handlePrescribe = async () => {
     if (!selectedConsultation) return;
     try {
+      setIsIssuingPrescription(true);
       await api.post(`/medications/create?student_id=${selectedConsultation.student_id}`, {
         ...prescData,
         symptom_record_id: selectedConsultation.id
       });
-      alert('Prescription issued successfully.');
+      setSuccessMessage('Prescription issued successfully.');
+      setTimeout(() => setSuccessMessage(''), 3000);
       setActiveTab('review');
     } catch (err) {
       console.error(err);
       alert('Failed to issue prescription.');
+    } finally {
+      setIsIssuingPrescription(false);
     }
   };
 
   const handleIssueSlip = async () => {
     if (!selectedConsultation) return;
     try {
+      setIsIssuingSlip(true);
       await api.post('/excuse-slips/', {
         ...slipData,
         student_id: selectedConsultation.student_id,
         symptom_record_id: selectedConsultation.id
       });
-      alert('Excuse slip issued successfully.');
+      setSuccessMessage('Excuse slip issued successfully.');
+      setTimeout(() => setSuccessMessage(''), 3000);
       setActiveTab('review');
     } catch (err) {
       console.error(err);
       alert('Failed to issue excuse slip.');
+    } finally {
+      setIsIssuingSlip(false);
     }
   };
 
@@ -214,6 +246,20 @@ const StaffConsultations = () => {
           </div>
         </div>
       </div>
+
+      <AnimatePresence>
+        {successMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="bg-emerald-50 text-emerald-600 px-6 py-4 rounded-2xl border border-emerald-100 flex items-center gap-3 shadow-sm mx-2"
+          >
+            <CheckCircle className="w-5 h-5" />
+            <span className="text-sm font-bold">{successMessage}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="bg-white rounded-[2.5rem] shadow-sm border border-gray-100 overflow-hidden">
         {loading ? (
@@ -303,10 +349,11 @@ const StaffConsultations = () => {
                         </button>
                         <button 
                           onClick={() => exportReferralPdf(c.id)}
-                          className="p-3 text-red-600 bg-red-50 hover:bg-red-600 hover:text-white rounded-xl transition-all"
+                          disabled={isExportingPdf}
+                          className="p-3 text-red-600 bg-red-50 hover:bg-red-600 hover:text-white rounded-xl transition-all disabled:opacity-50 flex items-center justify-center"
                           title="Generate Referral PDF"
                         >
-                          <DocumentArrowDownIcon className="w-5 h-5" />
+                          {isExportingPdf ? <Loader2 className="w-5 h-5 animate-spin" /> : <DocumentArrowDownIcon className="w-5 h-5" />}
                         </button>
                         <button
                           onClick={() => handleQuickMessage(c)}
@@ -317,10 +364,11 @@ const StaffConsultations = () => {
                         </button>
                         <button 
                           onClick={() => exportReferralExcel(c.id)}
-                          className="p-3 text-green-700 bg-green-50 hover:bg-green-700 hover:text-white rounded-xl transition-all"
+                          disabled={isExportingExcel}
+                          className="p-3 text-green-700 bg-green-50 hover:bg-green-700 hover:text-white rounded-xl transition-all disabled:opacity-50 flex items-center justify-center"
                           title="Data Integration (XLSX)"
                         >
-                          <ArrowDownTrayIcon className="w-5 h-5" />
+                          {isExportingExcel ? <Loader2 className="w-5 h-5 animate-spin" /> : <ArrowDownTrayIcon className="w-5 h-5" />}
                         </button>
                       </div>
                     </td>
@@ -486,8 +534,9 @@ const StaffConsultations = () => {
                             type="button"
                             onClick={handleSendMessage}
                             disabled={sendingMessage || !messageBody.trim()}
-                            className="px-5 py-3 h-fit bg-blue-600 text-white font-black uppercase tracking-widest text-[10px] rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                            className="px-5 py-3 h-fit bg-blue-600 text-white font-black uppercase tracking-widest text-[10px] rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
                           >
+                            {sendingMessage && <Loader2 className="w-3 h-3 animate-spin" />}
                             {sendingMessage ? 'Sending...' : 'Send'}
                           </button>
                         </div>
@@ -502,9 +551,11 @@ const StaffConsultations = () => {
                         </button>
                         <button 
                           onClick={handleUpdate}
-                          className="flex-1 py-5 bg-cpsu-green text-white font-black uppercase tracking-widest text-[10px] rounded-[1.8rem] shadow-2xl shadow-cpsu-green/20 hover:bg-black transition-all active:scale-95"
+                          disabled={isUpdating}
+                          className="flex-1 py-5 bg-cpsu-green text-white font-black uppercase tracking-widest text-[10px] rounded-[1.8rem] shadow-2xl shadow-cpsu-green/20 hover:bg-black transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
-                          Commit Review
+                          {isUpdating && <Loader2 className="w-4 h-4 animate-spin" />}
+                          {isUpdating ? 'Committing...' : 'Commit Review'}
                         </button>
                       </div>
                     </div>
@@ -582,9 +633,11 @@ const StaffConsultations = () => {
                         </button>
                         <button 
                           onClick={handlePrescribe}
-                          className="flex-1 py-5 bg-blue-600 text-white font-black uppercase tracking-widest text-[10px] rounded-[1.8rem] shadow-xl shadow-blue-600/20 hover:bg-black transition-all active:scale-95"
+                          disabled={isIssuingPrescription}
+                          className="flex-1 py-5 bg-blue-600 text-white font-black uppercase tracking-widest text-[10px] rounded-[1.8rem] shadow-xl shadow-blue-600/20 hover:bg-black transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
-                          Issue Prescription
+                          {isIssuingPrescription && <Loader2 className="w-4 h-4 animate-spin" />}
+                          {isIssuingPrescription ? 'Issuing...' : 'Issue Prescription'}
                         </button>
                       </div>
                     </div>
@@ -630,9 +683,11 @@ const StaffConsultations = () => {
                         </button>
                         <button 
                           onClick={handleIssueSlip}
-                          className="flex-1 py-5 bg-cpsu-gold text-white font-black uppercase tracking-widest text-[10px] rounded-[1.8rem] shadow-xl shadow-cpsu-gold/20 hover:bg-black transition-all active:scale-95"
+                          disabled={isIssuingSlip}
+                          className="flex-1 py-5 bg-cpsu-gold text-white font-black uppercase tracking-widest text-[10px] rounded-[1.8rem] shadow-xl shadow-cpsu-gold/20 hover:bg-black transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
-                          Issue Excuse Slip
+                          {isIssuingSlip && <Loader2 className="w-4 h-4 animate-spin" />}
+                          {isIssuingSlip ? 'Issuing...' : 'Issue Excuse Slip'}
                         </button>
                       </div>
                     </div>

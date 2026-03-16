@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { LogIn, User, Lock, AlertCircle, ArrowLeft, HeartPulse, Activity, ShieldCheck, Eye, EyeOff } from 'lucide-react';
+import { LogIn, User, Lock, AlertCircle, ArrowLeft, HeartPulse, Activity, ShieldCheck, Eye, EyeOff, CheckCircle } from 'lucide-react';
 import { authService } from '../api/service';
 
 const Login = () => {
@@ -9,6 +9,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -16,23 +17,26 @@ const Login = () => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
+    setSuccess('');
     
     try {
       const data = await authService.login(schoolId, password);
       localStorage.setItem('token', data.access_token);
       localStorage.setItem('user', JSON.stringify(data.user));
+      setSuccess('Logged in successfully!');
       
       // Role-based redirection
-      if (data.role === 'admin') {
-        navigate('/admin');
-      } else if (data.role === 'staff') {
-        navigate('/staff');
-      } else {
-        navigate('/student');
-      }
+      setTimeout(() => {
+        if (data.role === 'admin') {
+          navigate('/admin');
+        } else if (data.role === 'staff') {
+          navigate('/staff');
+        } else {
+          navigate('/student');
+        }
+      }, 1000);
     } catch (err) {
       setError(err.response?.data?.detail || 'Login failed. Please check your credentials.');
-    } finally {
       setIsLoading(false);
     }
   };
@@ -147,17 +151,33 @@ const Login = () => {
                 </motion.div>
               )}
 
+              {success && (
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="rounded-xl bg-emerald-50 p-4 border border-emerald-100"
+                >
+                  <div className="flex items-center">
+                    <CheckCircle className="h-5 w-5 text-emerald-500 mr-2 shrink-0" />
+                    <p className="text-sm text-emerald-700 font-bold">{success}</p>
+                  </div>
+                </motion.div>
+              )}
+
               <div>
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className={`w-full flex justify-center py-3.5 px-6 border border-transparent rounded-xl shadow-lg text-sm font-bold text-white bg-cpsu-green hover:bg-cpsu-green-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cpsu-green transition-all shadow-cpsu-green/20 ${isLoading ? 'opacity-70 cursor-not-allowed' : 'hover:-translate-y-0.5 active:scale-95'}`}
+                  className={`w-full flex items-center justify-center py-3.5 px-6 border border-transparent rounded-xl shadow-lg text-sm font-bold text-white bg-cpsu-green hover:bg-cpsu-green-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cpsu-green transition-all shadow-cpsu-green/20 ${isLoading ? 'opacity-70 cursor-not-allowed' : 'hover:-translate-y-0.5 active:scale-95'}`}
                 >
                   {isLoading ? (
-                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
+                    <>
+                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Signing in...
+                    </>
                   ) : (
                     <>
                       Sign In

@@ -27,6 +27,7 @@ const MedicalRecords = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDoc, setSelectedDoc] = useState(null);
   const [issueModalOpen, setIssueModalOpen] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
   
   // Excuse Slip Form State
   const [slipForm, setSlipForm] = useState({
@@ -36,6 +37,7 @@ const MedicalRecords = () => {
     end_date: '',
     reason: ''
   });
+  const [isGeneratingSlip, setIsGeneratingSlip] = useState(false);
 
   useEffect(() => {
     fetchDocuments();
@@ -56,12 +58,16 @@ const MedicalRecords = () => {
   const handleIssueSlip = async (e) => {
     e.preventDefault();
     try {
+      setIsGeneratingSlip(true);
       await excuseSlipService.createExcuseSlip(slipForm);
       setIssueModalOpen(false);
       setSlipForm({ student_id: '', symptom_record_id: null, start_date: '', end_date: '', reason: '' });
-      // Show success notification or toast here if available
+      setSuccessMessage('Excuse slip generated successfully.');
+      setTimeout(() => setSuccessMessage(''), 3000);
     } catch (err) {
       alert("Failed to issue excuse slip.");
+    } finally {
+      setIsGeneratingSlip(false);
     }
   };
 
@@ -73,6 +79,8 @@ const MedicalRecords = () => {
     try {
       setLoading(true);
       await documentService.deleteDocument(id);
+      setSuccessMessage('Medical record deleted successfully.');
+      setTimeout(() => setSuccessMessage(''), 3000);
       fetchDocuments();
     } catch (err) {
       console.error('Delete failed:', err);
@@ -135,6 +143,20 @@ const MedicalRecords = () => {
           />
         </div>
       </div>
+
+      <AnimatePresence>
+        {successMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="bg-emerald-50 text-emerald-600 px-6 py-4 rounded-2xl border border-emerald-100 flex items-center gap-3 shadow-sm mx-2"
+          >
+            <CheckCircle className="w-5 h-5" />
+            <span className="text-sm font-bold">{successMessage}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Content */}
       <div className="bg-white rounded-[3rem] shadow-sm border border-gray-100 overflow-hidden">
@@ -322,9 +344,11 @@ const MedicalRecords = () => {
                     </button>
                     <button 
                       type="submit" 
-                      className="flex-1 py-5 bg-black text-white font-black uppercase tracking-widest text-[10px] rounded-[1.8rem] shadow-2xl shadow-gray-200 hover:bg-cpsu-green transition-all"
+                      disabled={isGeneratingSlip}
+                      className="flex-1 py-5 bg-black text-white font-black uppercase tracking-widest text-[10px] rounded-[1.8rem] shadow-2xl shadow-gray-200 hover:bg-cpsu-green transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
-                      Generate Certification
+                      {isGeneratingSlip && <Loader2 className="w-4 h-4 animate-spin" />}
+                      {isGeneratingSlip ? 'Generating...' : 'Generate Certification'}
                     </button>
                   </div>
                 </form>
