@@ -42,7 +42,6 @@ import StaffReports from './pages/staff/Reports';
 import StaffMessages from './pages/staff/Messages';
 import EmergencyMap from './pages/staff/EmergencyMap';
 import AdminDashboard from './pages/admin/Dashboard';
-import HotspotMap from './pages/admin/HotspotMap';
 
 import AlertBanner from './components/AlertBanner';
 import InternalHeader from './components/InternalHeader';
@@ -210,7 +209,6 @@ function App() {
             <Route path="/admin" element={<InternalLayout><AdminDashboard /></InternalLayout>} />
             <Route path="/admin/users" element={<InternalLayout><AdminDashboard /></InternalLayout>} />
             <Route path="/admin/audit" element={<InternalLayout><AuditLogs /></InternalLayout>} />
-            <Route path="/admin/map" element={<InternalLayout><HotspotMap /></InternalLayout>} />
             <Route path="/admin/settings" element={<InternalLayout><Settings /></InternalLayout>} />
           </Route>
         </Routes>

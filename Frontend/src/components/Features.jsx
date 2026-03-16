@@ -19,11 +19,6 @@ const features = [
     icon: FileText,
   },
   {
-    name: 'Emergency Hotspot Mapping',
-    description: 'Visual health surveillance for campus admins. Identify potential outbreaks and coordinate emergency responses in real-time.',
-    icon: ShieldCheck,
-  },
-  {
     name: 'Clinic Inventory IQ',
     description: 'Smart management of medical supplies and medications. Automated alerts for low stock ensure the clinic is always prepared.',
     icon: Clock,

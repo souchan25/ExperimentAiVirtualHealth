@@ -7,11 +7,14 @@ import {
   FireIcon, 
   ExclamationTriangleIcon 
 } from '@heroicons/react/24/outline';
+import { Loader2 } from 'lucide-react';
 
 const StaffReports = () => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
+  const [isExportingXlsx, setIsExportingXlsx] = useState(false);
 
   useEffect(() => {
     fetchStats();
@@ -31,8 +34,23 @@ const StaffReports = () => {
     }
   };
 
-  const handleExportPdf = async () => await reportService.exportPdf();
-  const handleExportXlsx = async () => await reportService.exportXlsx();
+  const handleExportPdf = async () => {
+    try {
+      setIsExportingPdf(true);
+      await reportService.exportPdf();
+    } finally {
+      setIsExportingPdf(false);
+    }
+  };
+
+  const handleExportXlsx = async () => {
+    try {
+      setIsExportingXlsx(true);
+      await reportService.exportXlsx();
+    } finally {
+      setIsExportingXlsx(false);
+    }
+  };
 
   if (loading) return (
     <div className="p-12 text-center">
@@ -69,17 +87,27 @@ const StaffReports = () => {
         <div className="flex gap-3">
           <button 
             onClick={handleExportPdf}
-            className="flex items-center px-6 py-4 bg-red-600 text-white font-black uppercase tracking-widest text-[10px] rounded-2xl hover:bg-red-700 shadow-lg shadow-red-100 transition-all group"
+            disabled={isExportingPdf}
+            className="flex items-center justify-center px-6 py-4 bg-red-600 text-white font-black uppercase tracking-widest text-[10px] rounded-2xl hover:bg-red-700 shadow-lg shadow-red-100 transition-all group disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <DocumentArrowDownIcon className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" />
-            Export PDF Report
+            {isExportingPdf ? (
+              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+            ) : (
+              <DocumentArrowDownIcon className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" />
+            )}
+            {isExportingPdf ? 'Exporting...' : 'Export PDF Report'}
           </button>
           <button 
             onClick={handleExportXlsx}
-            className="flex items-center px-6 py-4 bg-green-700 text-white font-black uppercase tracking-widest text-[10px] rounded-2xl hover:bg-green-800 shadow-lg shadow-green-100 transition-all group"
+            disabled={isExportingXlsx}
+            className="flex items-center justify-center px-6 py-4 bg-green-700 text-white font-black uppercase tracking-widest text-[10px] rounded-2xl hover:bg-green-800 shadow-lg shadow-green-100 transition-all group disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <ArrowDownTrayIcon className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" />
-            Export Data (XLSX)
+            {isExportingXlsx ? (
+              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+            ) : (
+              <ArrowDownTrayIcon className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" />
+            )}
+            {isExportingXlsx ? 'Exporting...' : 'Export Data (XLSX)'}
           </button>
         </div>
       </div>

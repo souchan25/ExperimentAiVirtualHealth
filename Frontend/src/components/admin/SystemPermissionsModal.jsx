@@ -110,9 +110,11 @@ const SystemPermissionsModal = ({ isOpen, onClose }) => {
                       <button 
                         onClick={() => toggleSetting(setting.setting_key, isEnabled)}
                         disabled={saving}
-                        className={`transition-colors ${isEnabled ? 'text-green-500' : 'text-gray-300'}`}
+                        className={`transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed ${isEnabled ? 'text-green-500' : 'text-gray-300'}`}
                       >
-                        {isEnabled ? (
+                        {saving ? (
+                          <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+                        ) : isEnabled ? (
                           <ToggleRight className="w-12 h-12 stroke-[1.5]" />
                         ) : (
                           <ToggleLeft className="w-12 h-12 stroke-[1.5]" />

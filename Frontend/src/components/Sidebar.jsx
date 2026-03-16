@@ -53,7 +53,6 @@ const Sidebar = ({ role, isOpen, setIsOpen }) => {
   const adminLinks = [
     { name: t('dashboard'), path: '/admin', icon: HomeIcon },
     { name: t('user_management'), path: '/admin/users', icon: UserCircleIcon },
-    { name: t('hotspot_map'), path: '/admin/map', icon: MapIcon },
     { name: t('settings'), path: '/admin/settings', icon: Cog6ToothIcon },
   ];
 

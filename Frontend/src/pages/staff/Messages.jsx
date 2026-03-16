@@ -7,6 +7,7 @@ import {
   MagnifyingGlassIcon,
   SparklesIcon
 } from '@heroicons/react/24/outline';
+import { Loader2 } from 'lucide-react';
 
 const StaffMessages = () => {
   const [messages, setMessages] = useState([]);
@@ -16,6 +17,7 @@ const StaffMessages = () => {
   const [newMessage, setNewMessage] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [loadError, setLoadError] = useState('');
+  const [sendingMessage, setSendingMessage] = useState(false);
 
   const scrollRef = React.useRef(null);
 
@@ -74,6 +76,7 @@ const StaffMessages = () => {
     e.preventDefault();
     if (!newMessage.trim() || !selectedStudent) return;
     try {
+      setSendingMessage(true);
       await messageService.sendMessage({
         recipient_id: selectedStudent.id,
         content: newMessage
@@ -83,6 +86,8 @@ const StaffMessages = () => {
       setMessages(updatedMessages);
     } catch (err) {
       console.error(err);
+    } finally {
+      setSendingMessage(false);
     }
   };
 
@@ -232,10 +237,14 @@ const StaffMessages = () => {
                 />
                 <button 
                   type="submit"
-                  disabled={!newMessage.trim()}
-                  className="p-3 md:p-4 bg-cpsu-green text-white rounded-xl md:rounded-2xl hover:bg-cpsu-green-dark shadow-lg shadow-cpsu-green/10 transition-all active:scale-95 disabled:opacity-50 disabled:grayscale flex-shrink-0"
+                  disabled={!newMessage.trim() || sendingMessage}
+                  className="p-3 md:p-4 bg-cpsu-green text-white rounded-xl md:rounded-2xl hover:bg-cpsu-green-dark shadow-lg shadow-cpsu-green/10 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 flex items-center justify-center"
                 >
-                  <PaperAirplaneIcon className="w-5 h-5 md:w-6 md:h-6 -rotate-45" />
+                  {sendingMessage ? (
+                    <Loader2 className="w-5 h-5 md:w-6 md:h-6 animate-spin" />
+                  ) : (
+                    <PaperAirplaneIcon className="w-5 h-5 md:w-6 md:h-6 -rotate-45" />
+                  )}
                 </button>
               </form>
             </div>
