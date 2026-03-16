@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { authService } from '../../api/service';
+import { authService, auditService } from '../../api/service';
 import { useNavigate } from 'react-router-dom';
 import { Users, Activity, Settings, PlusCircle, CheckCircle2, ShieldAlert, Zap, Terminal, Sparkles, ChevronRight, X } from 'lucide-react';
 import CreateStaffModal from '../../components/admin/CreateStaffModal';
@@ -46,6 +46,7 @@ const AdminDashboard = () => {
   const [isHealthModalOpen, setIsHealthModalOpen] = useState(false);
   const [isPermissionsModalOpen, setIsPermissionsModalOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [systemLogs, setSystemLogs] = useState([]);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -56,7 +57,53 @@ const AdminDashboard = () => {
         navigate('/login');
       }
     };
+
+    const fetchLogs = async () => {
+      try {
+        const logs = await auditService.getAuditLogs();
+        const formattedLogs = logs.slice(0, 5).map(log => {
+          let type = log.success ? 'OK' : 'ERR';
+          let color = log.success ? 'text-green-500' : 'text-red-500';
+          
+          if (log.action.toLowerCase().includes('login') || log.action.toLowerCase().includes('auth')) {
+            type = 'AUTH';
+            color = 'text-purple-500';
+          } else if (log.action.toLowerCase().includes('create') || log.action.toLowerCase().includes('update')) {
+            type = 'INFO';
+            color = 'text-blue-500';
+          }
+
+          let content = log.action;
+          if (log.model_name) {
+            content += ` on ${log.model_name}`;
+            if (log.object_id) {
+               content += ` (${log.object_id})`;
+            }
+          }
+          if (!log.success && log.error_message) {
+            content += ` - ${log.error_message}`;
+          }
+
+          return {
+            type,
+            content,
+            time: new Date(log.timestamp).toLocaleTimeString([], { hour12: false }),
+            color
+          };
+        });
+        
+        if (formattedLogs.length === 0) {
+          formattedLogs.push({ type: 'INFO', content: 'System initialized. No recent activity.', time: new Date().toLocaleTimeString([], { hour12: false }), color: 'text-blue-500' });
+        }
+        
+        setSystemLogs(formattedLogs);
+      } catch (err) {
+        console.error("Failed to fetch audit logs", err);
+      }
+    };
+
     fetchUser();
+    fetchLogs();
   }, [navigate]);
 
   const handleStaffSuccess = () => {
@@ -176,12 +223,7 @@ const AdminDashboard = () => {
               </div>
               
               <div className="flex-1 space-y-4 font-mono text-sm">
-                {[
-                  { type: 'OK', content: 'Database sync complete with Supabase production cluster.', time: '14:02:33', color: 'text-green-500' },
-                  { type: 'INFO', content: 'New ML insight generated for symptom record 4B22 (Confidence: 94%).', time: '13:45:12', color: 'text-blue-500' },
-                  { type: 'OK', content: 'Secure migration of 1,200+ patient records successfully verified.', time: '11:20:00', color: 'text-green-500' },
-                  { type: 'AUTH', content: 'Admin session initiated from authorized IP 192.168.1.1.', time: '10:05:44', color: 'text-purple-500' }
-                ].map((log, i) => (
+                {systemLogs.map((log, i) => (
                   <motion.div 
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}

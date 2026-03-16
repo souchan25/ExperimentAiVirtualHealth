@@ -357,4 +357,11 @@ export const settingsService = {
   }
 };
 
+export const auditService = {
+  getAuditLogs: async () => {
+    const response = await api.get('/audit/');
+    return response.data;
+  }
+};
+
 export default api;
