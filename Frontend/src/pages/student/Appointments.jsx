@@ -5,6 +5,7 @@ import { CalendarIcon, ClockIcon, PlusIcon, CheckCircleIcon, XCircleIcon } from 
 const Appointments = () => {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [newAppt, setNewAppt] = useState({
     scheduled_date: '',
@@ -33,6 +34,7 @@ const Appointments = () => {
 
   const handleCreate = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
     try {
       await appointmentService.createAppointment(newAppt);
       setShowModal(false);
@@ -40,6 +42,8 @@ const Appointments = () => {
       setNewAppt({ scheduled_date: '', scheduled_time: '', purpose: '', notes: '' });
     } catch (err) {
       console.error(err);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -197,9 +201,17 @@ const Appointments = () => {
                 </button>
                 <button 
                   type="submit"
-                  className="flex-1 py-3 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 shadow-lg shadow-green-100 transition-all"
+                  disabled={isSubmitting}
+                  className="flex-1 py-3 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 shadow-lg shadow-green-100 transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  Submit Request
+                  {isSubmitting ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Submitting...
+                    </>
+                  ) : (
+                    'Submit Request'
+                  )}
                 </button>
               </div>
             </form>
