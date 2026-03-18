@@ -33,7 +33,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
-const CLINIC_COORDS = [10.015, 122.845];
+const CLINIC_COORDS = [9.851093, 122.888895];
 const DEFAULT_ZOOM = 16;
 const REFRESH_INTERVAL_MS = 15000;
 const MAX_ROUTABLE_DISTANCE_KM = 80;

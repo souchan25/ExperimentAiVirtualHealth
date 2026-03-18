@@ -21,7 +21,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
-const CLINIC_COORDS = [10.015, 122.845];
+const CLINIC_COORDS = [9.851093, 122.888895];
 
 const clinicIcon = new L.Icon({
   iconUrl: markerIcon,
