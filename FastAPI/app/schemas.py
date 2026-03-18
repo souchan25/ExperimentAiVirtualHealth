@@ -470,3 +470,7 @@ class SystemSettingsResponse(SystemSettingsBase):
 
     class Config:
         from_attributes = True
+
+class PerformanceResponse(BaseModel):
+    latency_ms: int
+    status: str  # 'Normal', 'Degraded', 'Critical'

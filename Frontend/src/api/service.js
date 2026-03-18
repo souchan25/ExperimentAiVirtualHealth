@@ -123,6 +123,14 @@ export const staffService = {
   getHealth: async () => {
     const response = await api.get('/health/detail');
     return response.data;
+  },
+  getPerformance: async () => {
+    const response = await api.get('/staff/performance');
+    return response.data;
+  },
+  optimizeCache: async () => {
+    const response = await api.post('/staff/optimize-cache');
+    return response.data;
   }
 };
 

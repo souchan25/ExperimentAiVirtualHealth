@@ -108,3 +108,37 @@ async def update_symptom_record_status(
     await db.commit()
     
     return {"status": "success"}
+
+@router.get("/performance", response_model=dict)
+async def get_performance(
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Admin access only")
+    
+    # Mocking latency for now, in a real app this could be measured
+    import random
+    latency = random.randint(20, 60)
+    status = "Normal"
+    if latency > 150:
+        status = "Degraded"
+    elif latency > 300:
+        status = "Critical"
+        
+    return {
+        "latency_ms": latency,
+        "status": status
+    }
+
+@router.post("/optimize-cache")
+async def optimize_cache(
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Admin access only")
+        
+    # Simulate a cache optimization process
+    import asyncio
+    await asyncio.sleep(1.5)
+    
+    return {"message": "Cache optimized successfully", "timestamp": "just now"}

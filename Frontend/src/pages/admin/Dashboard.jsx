@@ -7,6 +7,7 @@ import CreateStaffModal from '../../components/admin/CreateStaffModal';
 import UserManagementModal from '../../components/admin/UserManagementModal';
 import SystemHealthModal from '../../components/admin/SystemHealthModal';
 import SystemPermissionsModal from '../../components/admin/SystemPermissionsModal';
+import PerformanceCard from '../../components/admin/PerformanceCard';
 
 const ActionCard = ({ title, desc, icon: Icon, onClick, color, delay, accentColor }) => {
   return (
@@ -61,7 +62,7 @@ const AdminDashboard = () => {
     const fetchLogs = async () => {
       try {
         const logs = await auditService.getAuditLogs();
-        const formattedLogs = logs.slice(0, 5).map(log => {
+        const formattedLogs = logs.map(log => {
           let type = log.success ? 'OK' : 'ERR';
           let color = log.success ? 'text-green-500' : 'text-red-500';
           
@@ -222,7 +223,7 @@ const AdminDashboard = () => {
                 </div>
               </div>
               
-              <div className="flex-1 space-y-4 font-mono text-sm">
+              <div className="flex-1 space-y-4 font-mono text-sm max-h-[500px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
                 {systemLogs.map((log, i) => (
                   <motion.div 
                     initial={{ opacity: 0, x: -10 }}
@@ -247,20 +248,7 @@ const AdminDashboard = () => {
             transition={{ delay: 0.5, duration: 0.6 }}
             className="col-span-1 space-y-6"
           >
-            <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-3xl p-8 text-white shadow-xl shadow-gray-200 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform duration-700" />
-              <div className="relative z-10">
-                <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center mb-4">
-                  <Zap className="w-6 h-6 text-cpsu-gold" />
-                </div>
-                <h3 className="text-xl font-black font-outfit mb-2">Performance API</h3>
-                <p className="text-gray-400 font-bold text-xs uppercase tracking-widest mb-6 leading-relaxed">Latency: 45ms (Normal)</p>
-                <button className="inline-flex items-center gap-2 px-6 py-3 bg-white text-gray-900 font-black uppercase tracking-widest text-[10px] rounded-xl hover:bg-cpsu-gold transition-all">
-                  Optimize Cache
-                  <Zap className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
+            <PerformanceCard />
 
             <div data-tour="security-pulse" className="bg-white rounded-3xl border border-gray-100 p-8 shadow-sm">
               <h2 className="text-xl font-black font-outfit text-gray-900 mb-6 flex items-center gap-2">
