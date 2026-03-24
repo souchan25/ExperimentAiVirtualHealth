@@ -7,6 +7,8 @@ const LanguageContext = createContext();
 export const LanguageProvider = ({ children }) => {
   const [language, setLanguage] = useState(localStorage.getItem('language') || 'en');
   const fetchSettings = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
     try {
       const settings = await settingsService.getSettings();
       if (settings.language) {

@@ -55,7 +55,8 @@ async def create_wellness_checkin(
     if len(recent_logs) >= 3:
         distressed_moods = {"Stressed", "Sad", "Anxious"}
         distress_count = sum(1 for log in recent_logs if log.mood in distressed_moods)
-        avg_stress = sum(log.stress_level for log in recent_logs) / len(recent_logs)
+        valid_stress = [log.stress_level for log in recent_logs if log.stress_level is not None]
+        avg_stress = sum(valid_stress) / len(valid_stress) if valid_stress else 0
         
         if distress_count >= 3 or avg_stress > 7:
             from ..utils.notifications import create_notification

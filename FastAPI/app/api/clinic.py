@@ -223,8 +223,12 @@ async def get_personal_trends(
     
     wellness_data = None
     if wellness_logs:
-        avg_stress = sum(log.stress_level for log in wellness_logs if log.stress_level) / len(wellness_logs)
-        avg_sleep = sum(log.sleep_hours for log in wellness_logs if log.sleep_hours) / len(wellness_logs)
+        valid_stress = [log.stress_level for log in wellness_logs if log.stress_level is not None]
+        avg_stress = sum(valid_stress) / len(valid_stress) if valid_stress else 0
+        
+        valid_sleep = [log.sleep_hours for log in wellness_logs if log.sleep_hours is not None]
+        avg_sleep = sum(valid_sleep) / len(valid_sleep) if valid_sleep else 0
+        
         moods = [log.mood for log in wellness_logs if log.mood]
         dominant_mood = Counter(moods).most_common(1)[0][0] if moods else "Neutral"
         activities = [log.physical_activity for log in wellness_logs if log.physical_activity]

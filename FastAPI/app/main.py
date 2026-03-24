@@ -15,8 +15,24 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     # Only auto-create tables when explicitly enabled (safer for shared/prod DBs).
     if settings.AUTO_CREATE_TABLES:
-        async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
+        try:
+            async with engine.begin() as conn:
+                await conn.run_sync(Base.metadata.create_all)
+                
+                # Auto-migrate sleep_quality column if it doesn't exist (postgresql specific)
+                from sqlalchemy import text
+                await conn.execute(text("""
+                    DO $$
+                    BEGIN
+                        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='wellness_checkins' AND column_name='sleep_quality') THEN
+                            ALTER TABLE wellness_checkins ADD COLUMN sleep_quality VARCHAR(50);
+                        END IF;
+                    END
+                    $$;
+                """))
+        except Exception as e:
+            logger.warning(f"Database sync warning (safe to ignore if db is not connected yet): {str(e)}")
+            
     yield
 
 app = FastAPI(
