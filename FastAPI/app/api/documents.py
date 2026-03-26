@@ -150,6 +150,34 @@ async def list_documents(
     documents = result.scalars().all()
     return documents
 
+@router.patch("/{document_id}/status", response_model=MedicalDocumentResponse)
+async def update_document_status(
+    document_id: uuid.UUID,
+    status: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    if current_user.role not in ["staff", "admin"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to update document status"
+        )
+        
+    result = await db.execute(select(MedicalDocument).where(MedicalDocument.id == document_id))
+    db_document = result.scalar_one_or_none()
+    
+    if not db_document:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail="Document not found"
+        )
+        
+    db_document.status = status
+    await db.commit()
+    await db.refresh(db_document)
+    
+    return db_document
+
 @router.delete("/{document_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_document(
     document_id: uuid.UUID,

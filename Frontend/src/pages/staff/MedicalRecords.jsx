@@ -15,7 +15,10 @@ import {
   User,
   ShieldCheck,
   PlusCircleIcon,
-  Trash2
+  Trash2,
+  Sparkles,
+  X,
+  AlertCircle
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { documentService, excuseSlipService } from '../../api/service';
@@ -28,6 +31,10 @@ const MedicalRecords = () => {
   const [selectedDoc, setSelectedDoc] = useState(null);
   const [issueModalOpen, setIssueModalOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  
+  // AI Insights State
+  const [selectedDocForAI, setSelectedDocForAI] = useState(null);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
   
   // Excuse Slip Form State
   const [slipForm, setSlipForm] = useState({
@@ -87,6 +94,22 @@ const MedicalRecords = () => {
       alert('Failed to delete the record.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleUpdateStatus = async (id, status) => {
+    try {
+      setUpdatingStatus(true);
+      await documentService.updateDocumentStatus(id, status);
+      setSuccessMessage(`Document ${status === 'reviewed' ? 'approved' : status === 'rejected' ? 'declined' : 'status updated'}.`);
+      setTimeout(() => setSuccessMessage(''), 3000);
+      setSelectedDocForAI(null); // Close modal
+      fetchDocuments(); // Refresh list
+    } catch (err) {
+      console.error('Status update failed:', err);
+      alert('Failed to update document status.');
+    } finally {
+      setUpdatingStatus(false);
     }
   };
 
@@ -237,6 +260,13 @@ const MedicalRecords = () => {
                           <ExternalLink className="w-5 h-5" />
                         </a>
                         <button 
+                          onClick={() => setSelectedDocForAI(doc)}
+                          className="p-3 bg-white border border-gray-100 text-gray-400 hover:text-cpsu-green hover:shadow-md rounded-xl transition-all"
+                          title="AI Summary"
+                        >
+                          <Sparkles className="w-5 h-5" />
+                        </button>
+                        <button 
                           onClick={() => handleDelete(doc.id)}
                           className="p-3 bg-white border border-gray-100 text-gray-400 hover:text-red-500 hover:shadow-md rounded-xl transition-all"
                           title="Delete Record"
@@ -259,6 +289,131 @@ const MedicalRecords = () => {
           </div>
         )}
       </div>
+
+      {/* AI Insights Modal */}
+      {selectedDocForAI && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="bg-cpsu-green p-6 text-white flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-white/20 rounded-lg">
+                  <Sparkles className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold font-outfit">AI Health Insights</h3>
+                  <p className="text-white/80 text-xs font-medium uppercase tracking-wider">Automated Clinical Summary</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setSelectedDocForAI(null)}
+                className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                disabled={updatingStatus}
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="p-8 space-y-6 max-h-[60vh] overflow-y-auto">
+              {!selectedDocForAI.extracted_data || Object.keys(selectedDocForAI.extracted_data).length === 0 ? (
+                <div className="text-center py-10">
+                  <AlertCircle className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-500 font-medium">No automated insights available for this document.</p>
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Patient Name</p>
+                      <p className="font-bold text-gray-900">{selectedDocForAI.extracted_data.patient_name || 'Not detected'}</p>
+                    </div>
+                    <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Test Date</p>
+                      <p className="font-bold text-gray-900">{selectedDocForAI.extracted_data.date || 'Not detected'}</p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Test Type</p>
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-cpsu-green/10 text-cpsu-green rounded-lg font-bold text-sm">
+                      <FileText className="w-4 h-4" />
+                      {selectedDocForAI.extracted_data.test_type || (selectedDocForAI.document_type || 'General Record').replace('_', ' ')}
+                    </div>
+                  </div>
+
+                  {selectedDocForAI.extracted_data.summary && (
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Clinical Summary</p>
+                      <div className="bg-cpsu-green/5 p-4 rounded-2xl border border-cpsu-green/10">
+                        <p className="text-sm text-gray-700 leading-relaxed italic">"{selectedDocForAI.extracted_data.summary}"</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedDocForAI.extracted_data.results && Array.isArray(selectedDocForAI.extracted_data.results) && selectedDocForAI.extracted_data.results.length > 0 && (
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Key Findings</p>
+                      <div className="space-y-2">
+                        {selectedDocForAI.extracted_data.results.map((result, idx) => {
+                          let label, value;
+                          if (typeof result === 'object' && result !== null) {
+                            if (result.key !== undefined) {
+                              label = result.key;
+                              value = result.value;
+                            } else {
+                              const entries = Object.entries(result);
+                              label = entries[0]?.[0] ?? 'Finding';
+                              value = entries[0]?.[1] ?? '—';
+                            }
+                          } else {
+                            label = 'Finding';
+                            value = result;
+                          }
+                          return (
+                            <div key={idx} className="flex items-center justify-between p-3 bg-white border border-gray-100 rounded-xl">
+                              <span className="text-sm font-medium text-gray-600">{label}</span>
+                              <span className="text-sm font-bold text-gray-900">{String(value)}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className="pt-4 border-t border-gray-100 flex items-center gap-2 text-[10px] text-gray-400 font-medium">
+                    <AlertCircle className="w-3 h-3" />
+                    AI-generated summary. Always double-check with the original document.
+                  </div>
+                </>
+              )}
+            </div>
+            
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex gap-3">
+              <button 
+                onClick={() => handleUpdateStatus(selectedDocForAI.id, 'action_required')}
+                disabled={updatingStatus}
+                className="flex-1 py-3 bg-white border border-gray-200 text-gray-600 rounded-xl font-bold hover:bg-gray-50 transition-all text-sm shadow-sm"
+              >
+                Request Info
+              </button>
+              <button 
+                onClick={() => handleUpdateStatus(selectedDocForAI.id, 'rejected')}
+                disabled={updatingStatus}
+                className="flex-1 py-3 bg-red-50 text-red-600 rounded-xl font-bold hover:bg-red-100 transition-all text-sm shadow-sm"
+              >
+                Decline
+              </button>
+              <button 
+                onClick={() => handleUpdateStatus(selectedDocForAI.id, 'reviewed')}
+                disabled={updatingStatus}
+                className="flex-[1.5] py-3 bg-cpsu-green text-white rounded-xl font-bold hover:bg-cpsu-green/90 transition-all text-sm shadow-sm flex items-center justify-center gap-2"
+              >
+                {updatingStatus && <Loader2 className="w-4 h-4 animate-spin" />}
+                {updatingStatus ? 'Updating...' : 'Approve Record'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Issue Excuse Slip Modal */}
       <AnimatePresence>

@@ -154,6 +154,10 @@ export const documentService = {
   deleteDocument: async (id) => {
     const response = await api.delete(`/documents/${id}`);
     return response.data;
+  },
+  updateDocumentStatus: async (id, status) => {
+    const response = await api.patch(`/documents/${id}/status?status=${status}`);
+    return response.data;
   }
 };
 
