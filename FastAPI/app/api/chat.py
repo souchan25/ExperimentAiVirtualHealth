@@ -104,6 +104,24 @@ async def end_chat(
     # Process history for clinic data if provided
     if history:
         try:
+            # Try to find the assessment JSON the AI generated in the chat
+            assessment_json = None
+            import re
+            import json
+            for msg in reversed(history):
+                if msg.get("role") == "assistant":
+                    content = msg.get("content", "")
+                    match = re.search(r'```json\n([\s\S]*?)\n```', content) or re.search(r'{[\s\S]*?}', content)
+                    if match:
+                        try:
+                            json_str = match.group(1) if r'```json' in content else match.group(0)
+                            data = json.loads(json_str)
+                            if data.get("type") == "assessment":
+                                assessment_json = data
+                                break
+                        except Exception:
+                            pass
+
             clinical_data = await ai_generator.extract_clinical_data(history)
             symptoms = clinical_data.get("symptoms", [])
             
@@ -113,22 +131,31 @@ async def end_chat(
                 symptoms = _extract_symptoms_from_history(history)
             
             if symptoms:
-                # Get prediction for current symptoms
-                prediction = ml_predictor.predict(symptoms)
-                ml_disease = prediction.get("predicted_disease", "Unknown")
-                ml_conf = prediction.get("confidence_score", 0.0)
-                
-                # Refine prediction with LLM
-                refined = await ai_generator.refine_diagnosis(symptoms, ml_disease, ml_conf)
+                if assessment_json and assessment_json.get("conditions") and len(assessment_json["conditions"]) > 0:
+                    top_disease = assessment_json["conditions"][0].get("name", "Unknown")
+                    prob = assessment_json["conditions"][0].get("probability", assessment_json.get("confidence", 80))
+                    confidence = float(prob) / 100.0 if prob > 1 else float(prob)
+                    top_predictions = assessment_json["conditions"]
+                else:
+                    # Get prediction for current symptoms
+                    prediction = ml_predictor.predict(symptoms)
+                    ml_disease = prediction.get("predicted_disease", "Unknown")
+                    ml_conf = prediction.get("confidence_score", 0.0)
+                    
+                    # Refine prediction with LLM
+                    refined = await ai_generator.refine_diagnosis(symptoms, ml_disease, ml_conf)
+                    top_disease = refined["refined_disease"]
+                    confidence = refined["refined_confidence"]
+                    top_predictions = prediction.get("top_predictions", [])
                 
                 db_symptom = SymptomRecord(
                     student_id=current_user.id,
                     symptoms=symptoms,
                     duration_days=clinical_data.get("duration_days", 1),
                     severity=clinical_data.get("severity", 1),
-                    predicted_disease=refined["refined_disease"],
-                    confidence_score=refined["refined_confidence"],
-                    top_predictions=prediction.get("top_predictions", []),
+                    predicted_disease=top_disease,
+                    confidence_score=confidence,
+                    top_predictions=top_predictions,
                     status="under_review",
                     is_acute=True
                 )
