@@ -497,7 +497,7 @@ class AIGenerator:
     ) -> dict:
         prompt = (
             "Given the patient's symptoms and predicted disease, provide concise health guidance with these keys: "
-            "summary, recommendations (list), red_flags (list), disclaimer. Return valid JSON only.\n"
+            "description (1-2 sentence explanation of the condition), summary, recommendations (list), red_flags (list), disclaimer. Return valid JSON only.\n"
             f"Symptoms: {', '.join(symptoms)}\n"
             f"Predicted disease: {predicted_disease}"
         )

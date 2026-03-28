@@ -64,6 +64,9 @@ async def submit_symptoms(
     if refined["is_overridden"]:
         predicted_disease = refined["refined_disease"]
         confidence_score = refined["refined_confidence"]
+        # Re-fetch description & precautions for the overridden disease
+        description = ml_predictor.description_dict.get(predicted_disease, "")
+        precautions = ml_predictor.precaution_dict.get(predicted_disease, [])
 
     # Save to database first to get the ID
     db_symptom = SymptomRecord(
@@ -117,8 +120,8 @@ async def submit_symptoms(
             "disclaimer",
             "This is an AI-generated preliminary assessment and does not constitute a formal medical diagnosis.",
         ),
-        "description": description,
-        "precautions": precautions,
+        "description": description or insights.get("description", ""),
+        "precautions": precautions if precautions else insights.get("precautions", []),
     }
 
 @router.get("/symptoms/history", response_model=list[SymptomResponse])
