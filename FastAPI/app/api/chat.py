@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from ..database import get_db
-from ..models import ChatSession, HealthInsight, User
+from ..models import ChatSession, HealthInsight, User, HealthProfile, SymptomRecord
 from ..schemas import ChatSessionCreate, ChatSessionResponse, ChatMessage, HealthInsightResponse
 from ..auth import get_current_user
 from ..services.llm import ai_generator
@@ -46,12 +46,44 @@ async def send_message(
         if session:
             language = session.language or "english"
             
+    # Fetch health profile and recent symptoms
+    profile_result = await db.execute(select(HealthProfile).where(HealthProfile.user_id == current_user.id))
+    profile = profile_result.scalars().first()
+    
+    health_profile_data = None
+    if profile:
+        health_profile_data = {
+            "age": profile.age,
+            "sex": profile.sex,
+            "blood_type": profile.blood_type,
+            "allergies": profile.allergies,
+            "pre_existing_conditions": profile.pre_existing_conditions
+        }
+        
+    symptoms_result = await db.execute(
+        select(SymptomRecord)
+        .where(SymptomRecord.student_id == current_user.id)
+        .order_by(SymptomRecord.created_at.desc())
+        .limit(3)
+    )
+    recent_records = symptoms_result.scalars().all()
+    
+    past_symptoms_list = []
+    for record in recent_records:
+        if isinstance(record.symptoms, list):
+            past_symptoms_list.extend(record.symptoms)
+            
+    seen = set()
+    past_symptoms = [x for x in past_symptoms_list if not (x in seen or seen.add(x))]
+
     # Generate LLM Response
     try:
         response_text = await ai_generator.generate_chat_response(
             msg_in.message,
             language=language,
             history=msg_in.history,
+            health_profile=health_profile_data,
+            past_symptoms=past_symptoms
         )
     except Exception as e:
         print(f"Error calling AI generator: {e}")
