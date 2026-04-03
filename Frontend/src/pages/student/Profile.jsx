@@ -45,7 +45,14 @@ const StudentProfile = () => {
     e.preventDefault();
     setSaving(true);
     try {
-      await profileService.updateProfile(profile);
+      // Sanitize data before sending to API
+      const sanitizedProfile = {
+        ...profile,
+        age: profile.age !== '' && profile.age !== null ? parseInt(profile.age, 10) : null,
+        sex: profile.sex || null,
+        blood_type: profile.blood_type || null,
+      };
+      await profileService.updateProfile(sanitizedProfile);
       setMessage('Profile updated successfully!');
       setTimeout(() => setMessage(''), 3000);
     } catch (err) {
