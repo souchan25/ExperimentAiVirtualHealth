@@ -473,6 +473,8 @@ class AIGenerator:
         target: str = "auto",
         language: str = "english",
         history: list | None = None,
+        health_profile: dict | None = None,
+        past_symptoms: list | None = None,
     ) -> str:
         messages = []
         if history:
@@ -486,7 +488,13 @@ class AIGenerator:
         if not messages:
             messages = [{"role": "user", "content": message}]
 
-        return await generate_chat_response(messages, target=target, language=language)
+        return await generate_chat_response(
+            messages, 
+            target=target, 
+            language=language, 
+            health_profile=health_profile, 
+            past_symptoms=past_symptoms
+        )
 
     async def generate_health_insights(
         self,
