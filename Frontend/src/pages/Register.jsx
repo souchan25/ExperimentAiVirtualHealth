@@ -76,13 +76,27 @@ const Register = () => {
     try {
       const dataToSubmit = { ...formData };
       delete dataToSubmit.confirmPassword;
+      // Send null instead of empty string for optional email (Pydantic EmailStr rejects "")
+      if (!dataToSubmit.email || dataToSubmit.email.trim() === '') {
+        dataToSubmit.email = null;
+      }
       await authService.register(dataToSubmit);
       setIsSuccess(true);
       setTimeout(() => {
         navigate('/login');
       }, 2000);
     } catch (err) {
-      setError(err.response?.data?.detail || 'Registration failed. Please check the information provided.');
+      const detail = err.response?.data?.detail;
+      if (Array.isArray(detail)) {
+        // FastAPI 422 returns detail as an array of validation error objects
+        setError(detail.map(d => d.msg || d.message || JSON.stringify(d)).join('. '));
+      } else if (typeof detail === 'string') {
+        setError(detail);
+      } else if (detail && typeof detail === 'object') {
+        setError(detail.msg || detail.message || JSON.stringify(detail));
+      } else {
+        setError('Registration failed. Please check the information provided.');
+      }
     } finally {
       setIsLoading(false);
     }
